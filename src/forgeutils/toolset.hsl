@@ -1,0 +1,112 @@
+#
+#                          Copyright (C) 2020 by Rafael Santiago
+#
+# Use of this source code is governed by GPL-v2 license that can
+# be found in the COPYING file.
+#
+
+include ~/toolsets/gcc/gcc-lib.hsl
+include ~/toolsets/gcc/gcc-app.hsl
+include ~/toolsets/clang/clang-lib.hsl
+include ~/toolsets/clang/clang-app.hsl
+include ~/toolsets/null/null.hsl
+include ~/toolsets/common/utils/lang/c/dependency_scanner.hsl
+include ~/lsutil.hsl
+
+function get_app_toolset() : result type string {
+    result get_toolset() + "-c-app";
+}
+
+function get_lib_toolset() : result type string {
+    result get_toolset() + "-c-lib";
+}
+
+local function get_toolset() : result type string {
+    var option type list;
+    var return type string;
+
+    $option = hefesto.sys.get_option("toolset");
+
+    if ($option.count() > 0) {
+        $return = $option.item(0);
+        $return.replace("-.*$", "");
+        result $return;
+    }
+
+    if (has_gcc()) {
+        $return = "gcc";
+    } else if (has_clang()) {
+        $return = "clang";
+    } else {
+        hefesto.sys.echo("ERROR: You must have gcc or clang well installed in your system.\n" +
+                         "       Install one of them and try again later.\n");
+        hefesto.project.abort(1);
+    }
+
+    result $return;
+}
+
+local function has_gcc() : result type int {
+    result (execbkcmd("gcc --version") == 0);
+}
+
+local function has_clang() : result type int {
+    result (execbkcmd("clang --version") == 0);
+}
+
+local function execbkcmd(cmdline type string) : result type int {
+    if (hefesto.sys.os_name() != "windows") {
+        $cmdline = $cmdline + " > /dev/null 2>&1";
+    } else {
+        $cmdline = $cmdline + " >  nul 2>&1";
+    }
+
+    result hefesto.sys.run($cmdline);
+}
+
+project lethe-bootstrap : toolset "no-tool-any-set" : 0;
+
+lethe-bootstrap.prologue() {
+    var option type list;
+
+    $option = hefesto.sys.get_option("forge-type");
+
+    if ($option.count() == 0) {
+        var ftypes type string;
+        $ftypes = ls2str(hefesto.sys.lines_from_file("FORGE_TYPES", ".*"));
+        $ftypes.replace("\n", ", ");
+        $ftypes.replace(", $", ".");
+        hefesto.sys.echo("BUILD ERROR: You need to indicate the forge type. It can be: " + $ftypes + "\n");
+        hefesto.project.abort(1);
+    }
+
+    var data type string;
+    $data = $option.item(0);
+
+    var forge_types type list;
+    $forge_types = hefesto.sys.lines_from_file("FORGE_TYPES", ".*");
+
+    var projects type list;
+    $projects = hefesto.sys.lines_from_file("PROJECTS", ".*");
+
+    var bin_dirs type list;
+    $bin_dirs = hefesto.sys.lines_from_file("BIN_DIRS", ".*");
+
+    var i type int;
+    $i = $forge_types.index_of($data);
+
+    if ($i == -1) {
+        $ftypes = ls2str(hefesto.sys.lines_from_file("FORGE_TYPES", ".*"));
+        $ftypes.replace("\n", ", ");
+        $ftypes.replace(", $", ".");
+        hefesto.sys.echo("BUILD ERROR: Unknown forge type : '" + $data + "'.\n" +
+                         "             You need to indicate a valid forge type. It can be: " + $ftypes + "\n");
+        hefesto.project.abort(1);
+    }
+
+    var bin_dir type string;
+    $bin_dir = $bin_dirs.item($i);
+
+    $data = $projects.item($i);
+    hefesto.sys.forge($data, "Forgefile.hsl", hefesto.project.cmdline() + " --bin-output-dir=" + $bin_dir);
+}

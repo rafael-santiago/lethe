@@ -2,3 +2,5 @@ bin/*
 lib/*
 src/o/*
 src/.Forgefile-*
+src/test/o/*
+src/test/bin/*

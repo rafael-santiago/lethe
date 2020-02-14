@@ -32,7 +32,7 @@ lethe-tool.prologue() {
 }
 
 lethe-tool.epilogue() {
-    # Run tests.
+    run_tests();
 }
 
 # -- liblethe build
@@ -61,7 +61,20 @@ liblethe.prologue() {
 }
 
 liblethe.epilogue() {
-    # Run tests.
+    run_tests();
+}
+
+local function run_tests() : result type none {
+    if (hefesto.sys.cd("test") != 1) {
+        hefesto.sys.echo("BUILD ERROR: Test directory not found!\n");
+        hefesto.project.abort(1);
+    }
+    var ftype type list;
+    $ftype = hefesto.sys.get_option("forge-type");
+    if (hefesto.sys.run("hefesto --forge-type=" + $ftype.item(0)) != 0) {
+        hefesto.project.abort(1);
+    }
+    hefesto.sys.cd("..");
 }
 
 local function setup_lists() : result type none {

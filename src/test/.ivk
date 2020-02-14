@@ -1,0 +1,1 @@
+--forgefiles=Forgefile.hsl --Forgefile-projects=lethe-tests --includes=cutest/src --libraries=cutest/src/lib --ldflags=-lcutest --bin-output-dir=bin --obj-output-dir=o

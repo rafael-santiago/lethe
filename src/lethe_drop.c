@@ -108,7 +108,7 @@ int lethe_set_rename_nr(const int value) {
     int has_error = 1;
 
     if (value > 0) {
-        g_lethe_rename_nr = value;
+        g_lethe_drop_rename_nr = value;
         has_error = 0;
     }
 

@@ -21,6 +21,8 @@
 
 int g_lethe_drop_rename_nr = 10;
 
+lethe_stat g_lethe_stat = stat;
+
 static char g_lethe_allowed_fname_symbols[] = {
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
@@ -106,6 +108,10 @@ int lethe_set_rename_nr(const int value) {
     g_lethe_rename_nr = value;
 }
 
+void lethe_set_stat(lethe_stat func_addr) {
+    g_lethe_stat = func_addr;
+}
+
 static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, lethe_randomizer get_byte) {
     int has_error = 1;
     struct stat st;
@@ -124,7 +130,7 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
 
     lethe_set_error_last_filepath(filepath);
 
-    if (stat(filepath, &st) != 0) {
+    if (g_lethe_stat(filepath, &st) != 0) {
         lethe_set_error_code(kLetheErrorUnableToAccess);
         goto lethe_do_drop_epilogue;
     }
@@ -147,7 +153,19 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
 
     if (dtype & kLetheFileRemove) {
         if (S_ISDIR(st.st_mode)) {
-            // TODO(Rafael): Do all recursion needed.
+            if ((has_error = chdir(filepath)) != 0) {
+                goto lethe_do_drop_epilogue;
+            }
+
+            // INFO(Rafael): If a directory removing was requested so is inferred that everything within
+            //               this directory must be removed.
+            if ((has_error = lethe_drop_pattern("*", dtype, get_byte)) != 0) {
+                goto lethe_do_drop_epilogue;
+            }
+
+            if ((has_error = chdir("..")) != 0) {
+                goto lethe_do_drop_epilogue;
+            }
         }
 
         has_error = lethe_remove(filepath, get_byte);
@@ -314,7 +332,7 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
 
         do {
             get_rnd_filename(curr_fn, get_byte);
-        } while (stat(curr_fp, &st) == 0);
+        } while (g_lethe_stat(curr_fp, &st) == 0);
 
         if (rename(last_fp, curr_fp) != 0) {
             goto lethe_remove_epilogue;

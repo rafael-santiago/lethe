@@ -16,4 +16,6 @@ int lethe_drop_pattern(const char *filepath, const lethe_drop_type dtype, lethe_
 
 int lethe_set_rename_nr(const int value);
 
+void lethe_set_stat(lethe_stat func_addr);
+
 #endif

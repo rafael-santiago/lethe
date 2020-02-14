@@ -22,11 +22,14 @@ typedef enum {
     kLetheErrorUnableToAccess,
     kLetheErrorOpenHasFailed,
     kLetheErrorDataOblivionHasFailed,
+    kLetheErrorFileRemoveHasFailed,
     kLetheErrorNr
 }lethe_error_code;
 
 extern int g_lethe_err;
 
 extern char g_lethe_filepath[4096];
+
+extern int g_lethe_rename_nr;
 
 #endif

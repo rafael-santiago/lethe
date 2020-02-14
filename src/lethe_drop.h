@@ -10,8 +10,10 @@
 
 #include <lethe_types.h>
 
-#define lethe_drop(filename, dtype, arg...) lethe_do_drop(filepath, dtype, arg)
+#define lethe_drop(filename, dtype, arg...) lethe_drop_pattern(filepath, dtype, arg)
 
-int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, lethe_randomizer get_byte);
+int lethe_drop_pattern(const char *filepath, const lethe_drop_type dtype, lethe_randomizer get_byte);
+
+int lethe_set_rename_nr(const int value);
 
 #endif

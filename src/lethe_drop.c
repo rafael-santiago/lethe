@@ -105,11 +105,25 @@ lethe_drop_pattern_epilogue:
 }
 
 int lethe_set_rename_nr(const int value) {
-    g_lethe_rename_nr = value;
+    int has_error = 1;
+
+    if (value > 0) {
+        g_lethe_rename_nr = value;
+        has_error = 0;
+    }
+
+    return has_error;
 }
 
-void lethe_set_stat(lethe_stat func_addr) {
-    g_lethe_stat = func_addr;
+int lethe_set_stat(lethe_stat func_addr) {
+    int has_error = 1;
+
+    if (func_addr != NULL) {
+        g_lethe_stat = func_addr;
+        has_error = 0;
+    }
+
+    return has_error;
 }
 
 static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, lethe_randomizer get_byte) {

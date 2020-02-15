@@ -21,7 +21,7 @@ unsigned char lethe_default_randomizer(void) {
         fd = open("/dev/random", O_NONBLOCK | O_RDONLY);
     }
 
-    if (fd == -1) {
+    if (fd != -1) {
         read(fd, &byte, 1);
         close(fd);
     }

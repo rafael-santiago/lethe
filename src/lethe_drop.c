@@ -53,7 +53,7 @@ int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, lethe_r
     char fullpath[4096], *filename;
     struct stat st;
 
-    lethe_set_error_last_filepath(".");
+    lethe_set_last_filepath(".");
 
     if (getcwd(cwd, sizeof(cwd) - 1) == NULL) {
         lethe_set_error_code(kLetheErrorUnableToAccess);
@@ -62,7 +62,7 @@ int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, lethe_r
 
     cwd_size = strlen(cwd);
 
-    lethe_set_error_last_filepath(cwd);
+    lethe_set_last_filepath(cwd);
 
     if ((dir = opendir(cwd)) == NULL) {
         lethe_set_error_code(kLetheErrorUnableToAccess);
@@ -81,7 +81,7 @@ int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, lethe_r
         filename_size = strlen(filename);
 
         if (lethe_strglob(filename, pattern)) {
-            lethe_set_error_last_filepath(filename);
+            lethe_set_last_filepath(filename);
 
             if (lethe_mkpath(fullpath, sizeof(fullpath), cwd, cwd_size, filename, filename_size) == NULL) {
                 lethe_set_error_code(kLetheErrorUnableToAccess);
@@ -142,7 +142,7 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
         goto lethe_do_drop_epilogue;
     }
 
-    lethe_set_error_last_filepath(filepath);
+    lethe_set_last_filepath(filepath);
 
     if (g_lethe_stat(filepath, &st) != 0) {
         lethe_set_error_code(kLetheErrorUnableToAccess);

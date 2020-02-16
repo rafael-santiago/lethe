@@ -65,16 +65,18 @@ liblethe.epilogue() {
 }
 
 local function run_tests() : result type none {
-    if (hefesto.sys.cd("test") != 1) {
-        hefesto.sys.echo("BUILD ERROR: Test directory not found!\n");
-        hefesto.project.abort(1);
+    if (hefesto.sys.last_forge_result() == 0) {
+        if (hefesto.sys.cd("test") != 1) {
+            hefesto.sys.echo("BUILD ERROR: Test directory not found!\n");
+            hefesto.project.abort(1);
+        }
+        var ftype type list;
+        $ftype = hefesto.sys.get_option("forge-type");
+        if (hefesto.sys.run("hefesto --forge-type=" + $ftype.item(0)) != 0) {
+            hefesto.project.abort(1);
+        }
+        hefesto.sys.cd("..");
     }
-    var ftype type list;
-    $ftype = hefesto.sys.get_option("forge-type");
-    if (hefesto.sys.run("hefesto --forge-type=" + $ftype.item(0)) != 0) {
-        hefesto.project.abort(1);
-    }
-    hefesto.sys.cd("..");
 }
 
 local function setup_lists() : result type none {

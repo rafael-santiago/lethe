@@ -13,7 +13,7 @@
 
 void lethe_set_error_code(const lethe_error_code code);
 
-void lethe_set_error_last_filepath(const char *filepath);
+void lethe_set_last_filepath(const char *filepath);
 
 char *lethe_get_last_error(char *buf, const size_t buf_size);
 

@@ -16,7 +16,7 @@ void lethe_set_error_code(const lethe_error_code code) {
     g_lethe_err = code;
 }
 
-void lethe_set_error_last_filepath(const char *filepath) {
+void lethe_set_last_filepath(const char *filepath) {
     snprintf(g_lethe_filepath, sizeof(g_lethe_filepath) - 1, "%s", filepath);
 }
 
@@ -39,19 +39,23 @@ char *lethe_get_last_error(char *buf, const size_t buf_size) {
             break;
 
         case kLetheErrorUnableToAccess:
-            snprintf(buf, buf_size - 1, "Unable to access file '%s'.\n", g_lethe_filepath);
+            snprintf(buf, buf_size - 1, "Unable to access file '%s'.", g_lethe_filepath);
             break;
 
         case kLetheErrorOpenHasFailed:
-            snprintf(buf, buf_size - 1, "Unable to open file '%s'.\n", g_lethe_filepath);
+            snprintf(buf, buf_size - 1, "Unable to open file '%s'.", g_lethe_filepath);
             break;
 
         case kLetheErrorDataOblivionHasFailed:
-            snprintf(buf, buf_size - 1, "Unable to scramble data from file '%s'.\n", g_lethe_filepath);
+            snprintf(buf, buf_size - 1, "Unable to scramble data from file '%s'.", g_lethe_filepath);
+            break;
+
+        case kLetheErrorFileRemoveHasFailed:
+            snprintf(buf, buf_size - 1, "Unable to remove file '%s'.", g_lethe_filepath);
             break;
 
         default:
-            snprintf(buf, buf_size - 1, "You have found a unicorn! Congrats!\n");
+            snprintf(buf, buf_size - 1, "You have found a unicorn! Congrats!");
             break;
     }
 

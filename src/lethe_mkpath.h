@@ -10,6 +10,6 @@
 
 #include <stdlib.h>
 
-char *lethe_mkpath(char *buf, const size_t buf_size, char *a, const size_t a_size, char *b, const size_t b_size);
+char *lethe_mkpath(char *buf, const size_t buf_size, const char *a, const size_t a_size, const char *b, const size_t b_size);
 
 #endif

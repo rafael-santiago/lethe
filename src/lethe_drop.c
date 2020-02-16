@@ -171,7 +171,7 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
                 goto lethe_do_drop_epilogue;
             }
 
-            // INFO(Rafael): If a directory removing was requested so is inferred that everything within
+            // INFO(Rafael): If a directory removing was requested then is inferred that everything within
             //               this directory must be removed.
             if ((has_error = lethe_drop_pattern("*", dtype, get_byte)) != 0) {
                 goto lethe_do_drop_epilogue;

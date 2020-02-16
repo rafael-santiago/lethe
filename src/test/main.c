@@ -98,7 +98,7 @@ CUTE_TEST_CASE(lethe_error_stuff_tests)
         { kLetheErrorDataOblivionHasFailed, "Eggs.Duh", "Unable to scramble data from file 'Eggs.Duh'." },
         { kLetheErrorFileRemoveHasFailed, "Caneta_Azul", "Unable to remove file 'Caneta_Azul'." }, // ROM 'cached'.
         { kLetheErrorNr, "Oh! yeah! hehehehe huhhhuhu Destroy! Destroy! Destroy!!! hehehehe hhuhuhuh",
-                         "You have found a unicorn! Congrats!" } // I am crazy person, just ignore.
+                         "You have found a unicorn! Congrats!" } // I am a crazy person, just ignore.
     }, *test, *test_end;
     char buf[1024];
 

@@ -58,10 +58,8 @@ liblethe.prologue() {
             var filename type string;
             $filename = filenamefrompath($impfile);
             $filename.replace(".c$", ".o");
-            if (hefesto.sys.cd("o")) {
-                hefesto.sys.rm($filename);
-                hefesto.sys.cd("..");
-            }
+            $filename = hefesto.sys.make_path("o", $filename);
+            hefesto.sys.rm($filename);
             $src.del_index($s);
         }
         $s = $s + 1;

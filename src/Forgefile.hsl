@@ -6,6 +6,7 @@
 #
 
 include forgeutils/toolset.hsl
+include ~/fsutil.hsl
 
 local var src type list;
 local var includes type list;
@@ -47,14 +48,21 @@ liblethe.preloading() {
 
 liblethe.prologue() {
     setup_lists();
+    $deps = get_c_cpp_deps();
     var s type int;
     $s = 0;
     while ($s < $src.count()) {
         var impfile type string;
         $impfile = $src.item($s);
-        if ($impfile.match(".*main\\.c$") == 1) {
+        if ($impfile.match(".*(main\\.c|lethe_option\\.c)$") == 1) {
+            var filename type string;
+            $filename = filenamefrompath($impfile);
+            $filename.replace(".c$", ".o");
+            if (hefesto.sys.cd("o")) {
+                hefesto.sys.rm($filename);
+                hefesto.sys.cd("..");
+            }
             $src.del_index($s);
-            break;
         }
         $s = $s + 1;
     }

@@ -56,6 +56,13 @@ lethe-tests.prologue() {
     if (hefesto.sys.os_name() == "windows") {
         $appname = $appname + ".exe";
     }
+    var option type list;
+    $option = hefesto.sys.get_option("forge-type");
+    if ($option.item(0) == "lib") {
+        $cflags.add_item("-DLETHE_LIB=1");
+    } else if ($option.item(0) == "tool") {
+        $cflags.add_item("-DLETHE_TOOL=1");
+    }
 }
 
 lethe-tests.epilogue() {

@@ -11,6 +11,9 @@
 #include <lethe_mkpath.h>
 #include <lethe_random.h>
 #include <lethe_error.h>
+#if defined(LETHE_TOOL)
+# include <lethe_option.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 
@@ -20,6 +23,9 @@ CUTE_DECLARE_TEST_CASE(lethe_strglob_tests);
 CUTE_DECLARE_TEST_CASE(lethe_mkpath_tests);
 CUTE_DECLARE_TEST_CASE(lethe_default_randomizer_tests);
 CUTE_DECLARE_TEST_CASE(lethe_error_stuff_tests);
+#if defined(LETHE_TOOL)
+CUTE_DECLARE_TEST_CASE(lethe_option_stuff_tests);
+#endif
 
 CUTE_MAIN(lethe_tests_entry)
 
@@ -28,7 +34,55 @@ CUTE_TEST_CASE(lethe_tests_entry)
     CUTE_RUN_TEST(lethe_mkpath_tests);
     CUTE_RUN_TEST(lethe_default_randomizer_tests);
     CUTE_RUN_TEST(lethe_error_stuff_tests);
+#if defined(LETHE_TOOL)
+    CUTE_RUN_TEST(lethe_option_stuff_tests);
+#endif
 CUTE_TEST_CASE_END
+
+#if defined(LETHE_TOOL)
+CUTE_TEST_CASE(lethe_option_stuff_tests)
+    char *argv[] = {
+        "./lethe",
+        "--foo=bar",
+        "--bar=foo",
+        "--foobar"
+    };
+    int argc = 4;
+    struct option_tests {
+        int bool;
+        char *option;
+        char *default_s_value, *expected_s_value;
+        int default_b_value, expected_b_value;
+    } test_vector[] = {
+        { 0, "foo", "foo", "bar", 0, 0 },
+        { 0, "bar", "bar", "foo", 0, 0 },
+        { 1, "foobar", NULL, NULL, 0, 1 },
+        { 1, "barfoo", NULL, NULL, 1, 1 },
+        { 0, "Zzzz", "Rooc-fiu...", "Rooc-fiu...", 0, 0 }
+    }, *test, *test_end;
+    char *data;
+
+    CUTE_ASSERT((data = lethe_get_option("boom", "Muhauhahuahauha!!!")) != NULL);
+    CUTE_ASSERT(strcmp(data, "Muhauhahuahauha!!!") == 0);
+
+    CUTE_ASSERT(lethe_get_bool_option("boom", 0) == 0);
+
+    lethe_option_set_argc_argv(argc, argv);
+
+    test = &test_vector[0];
+    test_end = test + sizeof(test_vector) / sizeof(test_vector[0]);
+
+    while (test != test_end) {
+        if (test->bool) {
+            CUTE_ASSERT(lethe_get_bool_option(test->option, test->default_b_value) == test->expected_b_value);
+        } else {
+            CUTE_ASSERT((data = lethe_get_option(test->option, test->default_s_value)) != NULL);
+            CUTE_ASSERT(strcmp(data, test->expected_s_value) == 0);
+        }
+        test++;
+    }
+CUTE_TEST_CASE_END
+#endif
 
 CUTE_TEST_CASE(lethe_error_stuff_tests)
     struct lethe_error_caiau_ctx {

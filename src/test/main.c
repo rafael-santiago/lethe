@@ -5,7 +5,6 @@
  * be found in the COPYING file.
  *
  */
-
 #include <cutest.h>
 #include <lethe_strglob.h>
 #include <lethe_mkpath.h>
@@ -14,8 +13,60 @@
 #if defined(LETHE_TOOL)
 # include <lethe_option.h>
 #endif
+#include <lethe_drop.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+
+int stat_call_nr = 0;
+
+static int stat_wrapper(const char *pathname, struct stat *buf) {
+    stat_call_nr++;
+    return stat(pathname, buf);
+}
+
+static char *get_random_printable_buffer(const size_t bytes_total) {
+    static char bytes[] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+                            't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
+                            'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' };
+    const size_t bytes_nr = sizeof(bytes) / sizeof(bytes[0]);
+    char *buf = (char *) malloc(bytes_total), *bp, *bp_end;
+    if (buf == NULL) {
+        return NULL;
+    }
+    bp = buf;
+    bp_end = bp + bytes_total;
+    while (bp != bp_end) {
+        *bp = bytes[lethe_default_randomizer() % bytes_nr];
+        bp++;
+    }
+    return buf;
+}
+
+static int write_data_to_file(const char *filepath, const char *data, size_t data_size) {
+    FILE *fp;
+    if ((fp = fopen(filepath, "wb")) == NULL) {
+        return 1;
+    }
+    fwrite(data, 1, data_size, fp);
+    fprintf(fp, "\n");
+    fclose(fp);
+    return 0;
+}
+
+static char *get_ndata_from_file(const char *filepath, const size_t data_size) {
+    FILE *fp;
+    char *data;
+    if ((fp = fopen(filepath, "rb")) == NULL) {
+        return NULL;
+    }
+    if ((data = (char *)malloc(data_size)) == NULL) {
+        return NULL;
+    }
+    fread(data, 1, data_size, fp);
+    fclose(fp);
+    return data;
+}
 
 CUTE_DECLARE_TEST_CASE(lethe_tests_entry);
 
@@ -26,6 +77,7 @@ CUTE_DECLARE_TEST_CASE(lethe_error_stuff_tests);
 #if defined(LETHE_TOOL)
 CUTE_DECLARE_TEST_CASE(lethe_option_stuff_tests);
 #endif
+CUTE_DECLARE_TEST_CASE(lethe_drop_tests);
 
 CUTE_MAIN(lethe_tests_entry)
 
@@ -37,6 +89,36 @@ CUTE_TEST_CASE(lethe_tests_entry)
 #if defined(LETHE_TOOL)
     CUTE_RUN_TEST(lethe_option_stuff_tests);
 #endif
+    CUTE_RUN_TEST(lethe_drop_tests);
+CUTE_TEST_CASE_END
+
+CUTE_TEST_CASE(lethe_drop_tests)
+    char *buf, *temp;
+    struct stat st;
+
+    CUTE_ASSERT(lethe_set_stat(NULL) != 0);
+    CUTE_ASSERT(lethe_set_stat(stat_wrapper) == 0);
+    CUTE_ASSERT(lethe_set_rename_nr(0) != 0);
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // WARN(Rafael): At this point do not remove the chdir stuff otherwise you can lose important files.!!
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    CUTE_ASSERT(mkdir("lethe-lab", 0666) == 0);
+    CUTE_ASSERT(chdir("lethe-lab") == 0);
+    buf = get_random_printable_buffer(10);
+    CUTE_ASSERT(write_data_to_file("data.txt", buf, 10) == 0);
+    CUTE_ASSERT(lethe_drop("pata.txt", kLetheDataOblivion) != 0);
+    CUTE_ASSERT(lethe_drop("data.txt", kLetheDataOblivion) == 0);
+    CUTE_ASSERT(stat("data.txt", &st) == 0);
+    temp = get_ndata_from_file("data.txt", 10);
+    CUTE_ASSERT(temp != NULL);
+    CUTE_ASSERT(memcmp(temp, buf, 10) != 0);
+    free(buf);
+    free(temp);
+    // TODO(Rafael): Test drop by passing kLetheFileRemove and kLetheCustomRandomizer.
+    CUTE_ASSERT(remove("data.txt") == 0);
+    CUTE_ASSERT(chdir("..") == 0);
+    CUTE_ASSERT(rmdir("lethe-lab") == 0);
+    CUTE_ASSERT(stat_call_nr > 0);
 CUTE_TEST_CASE_END
 
 #if defined(LETHE_TOOL)
@@ -97,6 +179,7 @@ CUTE_TEST_CASE(lethe_error_stuff_tests)
         { kLetheErrorOpenHasFailed, "Beavis.uhhhh.'mouth'.hu-hu-hu!", "Unable to open file 'Beavis.uhhhh.'mouth'.hu-hu-hu!'." },
         { kLetheErrorDataOblivionHasFailed, "Eggs.Duh", "Unable to scramble data from file 'Eggs.Duh'." },
         { kLetheErrorFileRemoveHasFailed, "Caneta_Azul", "Unable to remove file 'Caneta_Azul'." }, // ROM 'cached'.
+        { kLetheErrorNothingToDrop, "", "Nothing to drop." },
         { kLetheErrorNr, "Oh! yeah! hehehehe huhhhuhu Destroy! Destroy! Destroy!!! hehehehe hhuhuhuh",
                          "You have found a unicorn! Congrats!" } // I am a crazy person, just ignore.
     }, *test, *test_end;

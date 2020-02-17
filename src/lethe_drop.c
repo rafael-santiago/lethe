@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 int g_lethe_drop_rename_nr = 10;
 
@@ -44,7 +45,7 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte);
 
 static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, lethe_randomizer get_byte);
 
-int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, lethe_randomizer get_byte) {
+int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, ...) {
     DIR *dir = NULL;
     int has_error = 1;
     char cwd[4096];
@@ -52,6 +53,14 @@ int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, lethe_r
     struct dirent *dt;
     char fullpath[4096], *filename;
     struct stat st;
+    lethe_randomizer get_byte = lethe_default_randomizer;
+    va_list ap;
+    int drop_nr = 0;
+
+    if (dtype & kLetheCustomRandomizer) {
+        va_start(ap, dtype);
+        get_byte = va_arg(ap, lethe_randomizer);
+    }
 
     lethe_set_last_filepath(".");
 
@@ -89,7 +98,9 @@ int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, lethe_r
                 goto lethe_drop_pattern_epilogue;
             }
 
-            has_error = lethe_do_drop(fullpath, dtype, get_byte);
+            if ((has_error = lethe_do_drop(fullpath, dtype, get_byte)) == 0) {
+                drop_nr++;
+            }
         }
     }
 
@@ -100,6 +111,15 @@ lethe_drop_pattern_epilogue:
     }
 
     chdir(cwd);
+
+    if (dtype & kLetheCustomRandomizer) {
+        va_end(ap);
+    }
+
+    if (drop_nr == 0) {
+        lethe_set_error_code(kLetheErrorNothingToDrop);
+        has_error = 1;
+    }
 
     return has_error;
 }
@@ -158,11 +178,15 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
             lethe_set_error_code(kLetheErrorOpenHasFailed);
             goto lethe_do_drop_epilogue;
         }
-        if (fdoblivion(fd, st.st_size, get_byte) != 0) {
+
+        has_error = fdoblivion(fd, st.st_size, get_byte);
+
+        close(fd);
+
+        if (has_error != 0) {
             lethe_set_error_code(kLetheErrorDataOblivionHasFailed);
             goto lethe_do_drop_epilogue;
         }
-        close(fd);
     }
 
     if (dtype & kLetheFileRemove) {
@@ -215,6 +239,10 @@ static int fdoblivion(int fd, const size_t fsize, lethe_randomizer get_byte) {
 
     fsync(fd);
 
+    if (lseek(fd, 0, SEEK_SET) != 0) {
+        goto fdoblivion_epilogue;
+    }
+
     memset(buf, 0x00, fsize);
 
     if (write(fd, buf, fsize) != fsize) {
@@ -222,6 +250,10 @@ static int fdoblivion(int fd, const size_t fsize, lethe_randomizer get_byte) {
     }
 
     fsync(fd);
+
+    if (lseek(fd, 0, SEEK_SET) != 0) {
+        goto fdoblivion_epilogue;
+    }
 
 #define fdoblivion_paranoid_reverie_step(fd, buf, fsize, get_byte, epilogue) {\
     free(buf);\
@@ -232,6 +264,9 @@ static int fdoblivion(int fd, const size_t fsize, lethe_randomizer get_byte) {
         goto epilogue;\
     }\
     fsync(fd);\
+    if (lseek(fd, 0, SEEK_SET) != 0) {\
+        goto epilogue;\
+    }\
 }
 
     // INFO(Rafael): This step of the implemented data wiping is based on the suggestions given by Bruce Schneier
@@ -267,7 +302,7 @@ static unsigned char *get_rnd_databuf(const size_t size, lethe_randomizer get_by
     unsigned char *buf = (unsigned char *) malloc(size);
     unsigned char *bp, *bp_end;
 
-    if (buf == NULL) {
+    if (buf != NULL) {
         bp = buf;
         bp_end = bp + size;
         while (bp != bp_end) {

@@ -15,8 +15,9 @@ typedef unsigned char (*lethe_randomizer)(void);
 typedef int (*lethe_stat)(const char *, struct stat *);
 
 typedef enum {
-    kLetheDataOblivion =                     0x1,
-    kLetheFileRemove   = kLetheDataOblivion << 1
+    kLetheDataOblivion     =                     0x1,
+    kLetheFileRemove       = kLetheDataOblivion << 1,
+    kLetheCustomRandomizer = kLetheFileRemove   << 1
 }lethe_drop_type;
 
 typedef enum {
@@ -27,6 +28,7 @@ typedef enum {
     kLetheErrorOpenHasFailed,
     kLetheErrorDataOblivionHasFailed,
     kLetheErrorFileRemoveHasFailed,
+    kLetheErrorNothingToDrop,
     kLetheErrorNr
 }lethe_error_code;
 

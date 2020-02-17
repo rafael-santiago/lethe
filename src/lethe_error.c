@@ -54,6 +54,10 @@ char *lethe_get_last_error(char *buf, const size_t buf_size) {
             snprintf(buf, buf_size - 1, "Unable to remove file '%s'.", g_lethe_filepath);
             break;
 
+        case kLetheErrorNothingToDrop:
+            snprintf(buf, buf_size - 1, "Nothing to drop.");
+            break;
+
         default:
             snprintf(buf, buf_size - 1, "You have found a unicorn! Congrats!");
             break;

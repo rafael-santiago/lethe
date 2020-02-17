@@ -35,7 +35,7 @@ static char g_lethe_allowed_fname_symbols[] = {
 static size_t g_lethe_allowed_fname_symbols_nr = sizeof(g_lethe_allowed_fname_symbols) /
                                                  sizeof(g_lethe_allowed_fname_symbols[0]);
 
-static unsigned char *get_rnd_databuf(const size_t size, lethe_randomizer get_byte);
+static void get_rnd_databuf(unsigned char *buf, const size_t size, lethe_randomizer get_byte);
 
 static void get_rnd_filename(char *filename, lethe_randomizer get_byte);
 
@@ -256,10 +256,7 @@ static int fdoblivion(int fd, const size_t fsize, lethe_randomizer get_byte) {
     }
 
 #define fdoblivion_paranoid_reverie_step(fd, buf, fsize, get_byte, epilogue) {\
-    free(buf);\
-    if ((buf = get_rnd_databuf(fsize, get_byte)) == NULL) {\
-        goto epilogue;\
-    }\
+    get_rnd_databuf(buf, fsize, get_byte);\
     if (write(fd, buf, fsize) != fsize) {\
         goto epilogue;\
     }\
@@ -298,22 +295,16 @@ fdoblivion_epilogue:
     return has_error;
 }
 
-static unsigned char *get_rnd_databuf(const size_t size, lethe_randomizer get_byte) {
-    unsigned char *buf = (unsigned char *) malloc(size);
+static void get_rnd_databuf(unsigned char *buf, const size_t size, lethe_randomizer get_byte) {
     unsigned char *bp, *bp_end;
 
-    if (buf != NULL) {
-        bp = buf;
-        bp_end = bp + size;
-        while (bp != bp_end) {
-            *bp = get_byte();
-            bp++;
-        }
+    bp = buf;
+    bp_end = bp + size;
+
+    while (bp != bp_end) {
+        *bp = get_byte();
+        bp++;
     }
-
-get_rnd_databuf_epilogue:
-
-    return buf;
 }
 
 static void get_rnd_filename(char *filename, lethe_randomizer get_byte) {

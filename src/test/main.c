@@ -14,15 +14,23 @@
 # include <lethe_option.h>
 #endif
 #include <lethe_drop.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
+#include <stdio.h>
 
 int stat_call_nr = 0;
+
+int randomizer_call_nr = 0;
 
 static int stat_wrapper(const char *pathname, struct stat *buf) {
     stat_call_nr++;
     return stat(pathname, buf);
+}
+
+static unsigned char randomizer_wrapper(void) {
+    randomizer_call_nr++;
+    return lethe_default_randomizer();
 }
 
 static char *get_random_printable_buffer(const size_t bytes_total) {
@@ -95,6 +103,7 @@ CUTE_TEST_CASE_END
 CUTE_TEST_CASE(lethe_drop_tests)
     char *buf, *temp;
     struct stat st;
+    char cmdline[4096];
 
     CUTE_ASSERT(lethe_set_stat(NULL) != 0);
     CUTE_ASSERT(lethe_set_stat(stat_wrapper) == 0);
@@ -114,11 +123,27 @@ CUTE_TEST_CASE(lethe_drop_tests)
     CUTE_ASSERT(memcmp(temp, buf, 10) != 0);
     free(buf);
     free(temp);
-    // TODO(Rafael): Test drop by passing kLetheFileRemove and kLetheCustomRandomizer.
     CUTE_ASSERT(remove("data.txt") == 0);
+    buf = get_random_printable_buffer(10);
+    CUTE_ASSERT(write_data_to_file("data.txt", buf, 10) == 0);
+    free(buf);
+    CUTE_ASSERT(stat("data.txt", &st) == 0);
+    CUTE_ASSERT(lethe_drop("data.txt", kLetheDataOblivion | kLetheFileRemove) == 0);
+    CUTE_ASSERT(stat("data.txt", &st) != 0);
+    buf = get_random_printable_buffer(10);
+    CUTE_ASSERT(write_data_to_file("data.txt", buf, 10) == 0);
+    free(buf);
+    CUTE_ASSERT(write_data_to_file("data.txt", buf, 10) == 0);
+    CUTE_ASSERT(stat("data.txt", &st) == 0);
+    CUTE_ASSERT(mkdir("sub-dir", 0666) == 0);
+    CUTE_ASSERT(write_data_to_file("sub-dir/do-not-forget-the-joker.txt", buf, 10) == 0);
+    CUTE_ASSERT(mkdir("sub-dir/empty", 0666) == 0);
     CUTE_ASSERT(chdir("..") == 0);
-    CUTE_ASSERT(rmdir("lethe-lab") == 0);
+    CUTE_ASSERT(lethe_drop("lethe-la[b]", kLetheDataOblivion | kLetheFileRemove | kLetheCustomRandomizer,
+                           randomizer_wrapper) == 0);
+    CUTE_ASSERT(stat("lethe-lab", &st) != 0);
     CUTE_ASSERT(stat_call_nr > 0);
+    CUTE_ASSERT(randomizer_call_nr > 0);
 CUTE_TEST_CASE_END
 
 #if defined(LETHE_TOOL)

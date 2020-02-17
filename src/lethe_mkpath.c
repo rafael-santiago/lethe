@@ -16,6 +16,8 @@ char *lethe_mkpath(char *buf, const size_t buf_size, const char *a, const size_t
         return NULL;
     }
 
+    memset(buf, 0, buf_size);
+
 #if defined(__unix__)
     ap = a;
     ap_end = a + a_size - (a_size > 0);
@@ -28,8 +30,6 @@ char *lethe_mkpath(char *buf, const size_t buf_size, const char *a, const size_t
 
     if (m > 0) {
         memcpy(buf, a, m);
-    } else {
-        memset(buf, 0, buf_size);
     }
 
     bp = b;

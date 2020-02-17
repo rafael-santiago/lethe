@@ -39,7 +39,7 @@ lethe-tool.epilogue() {
 # -- liblethe build
 
 project liblethe : toolset $curr_toolset :
-                      dependencies $deps : $src, $includes, $cflags, $libraries, $ldflags, "liblethe";
+                      dependencies $deps : $src, $includes, $cflags, $libraries, $ldflags, "liblethe.a";
 
 liblethe.preloading() {
     $curr_toolset = get_lib_toolset();

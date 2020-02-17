@@ -150,6 +150,7 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
     int has_error = 1;
     struct stat st;
     int fd;
+    int blkpad;
 
     if (filepath == NULL) {
         lethe_set_error_code(kLetheErrorNullFile);
@@ -179,7 +180,13 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
             goto lethe_do_drop_epilogue;
         }
 
-        has_error = fdoblivion(fd, st.st_size, get_byte);
+        // INFO(Rafael): Avoid leaking the original size of the file. The file data will turn into pure gibberish,
+        //               anyway, if we can avoid leaking this kind of information, let's do it.
+        if ((blkpad = st.st_size % st.st_blksize) > 0) {
+            blkpad = st.st_blksize - blkpad;
+        }
+
+        has_error = fdoblivion(fd, st.st_size + blkpad, get_byte);
 
         close(fd);
 
@@ -196,10 +203,9 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
             }
 
             // INFO(Rafael): If a directory removing was requested then is inferred that everything within
-            //               this directory must be removed.
-            if ((has_error = lethe_drop_pattern("*", dtype, get_byte)) != 0) {
-                goto lethe_do_drop_epilogue;
-            }
+            //               this directory must be removed. Let's empty it.
+
+            lethe_drop_pattern("*", dtype, get_byte);
 
             if ((has_error = chdir("..")) != 0) {
                 goto lethe_do_drop_epilogue;
@@ -314,10 +320,10 @@ static void get_rnd_filename(char *filename, lethe_randomizer get_byte) {
     fp = filename;
     fp_end = fp + strlen(fp);
 
-    do {
+    while (fp != fp_end) {
         *fp = g_lethe_allowed_fname_symbols[get_byte() % g_lethe_allowed_fname_symbols_nr];
         fp++;
-    } while (fp != fp_end);
+    }
 }
 
 static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
@@ -344,6 +350,11 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
     filepath_size -= 1;
 
 #if defined(__unix__)
+    g_lethe_stat(filepath, &st);
+    if (S_ISDIR(st.st_mode)) {
+        filepath_size = strlen(filepath) - 1;
+        filepath_size -= (filepath[filepath_size] == '/');
+    }
     while (filepath_size > 0 && filepath[filepath_size] != '/') {
         filepath_size--;
     }

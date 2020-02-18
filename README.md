@@ -1,7 +1,10 @@
-
-|----------:|:-----------------------|
-|!['Dante and the rive of Lethe' by Gustave Doré (1832-1883) / Public Domain](https://github.com/rafael-santiago/lethe/blob/master/etc/gustave-dore-dante-and-the-river-of-lethe.png "'Dante and the river of Lethe' by Gustave Doré (1832-1883) / Public Domain")|
-|> Let fancy still in my sense in Lethe steep;
+<table border = 0>
+<tr>
+<td>
+<img src="https://github.com/rafael-santiago/lethe/blob/master/etc/gustave-dore-dante-and-the-river-of-lethe.png" title= "'Dante and the river of Lethe' by Gustave Doré (1832-1883) / Public Domain">
+</td>
+<td>
+> Let fancy still in my sense in Lethe steep;
 > If it be thus to dream, still let me sleep!
 > Lethe, the river of oblivion, rolls her watery labyrinth,
 > which whoso drinks forgets both joy and grief
@@ -10,6 +13,9 @@
 > I am never, never, never coming home!
 >
 > --<cite>Willian Shakespeare [Twelfth Night], John Milton [Paradise Lost], Sylvia Plath [Amnesiac]</cite>|
+</td>
+</tr>
+</table>
 
 # Lethe
 

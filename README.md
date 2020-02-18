@@ -1,21 +1,20 @@
 !['Dante and the rive of Lethe' by Gustave Doré (1832-1883) / Public Domain](https://github.com/rafael-santiago/lethe/blob/master/etc/gustave-dore-dante-and-the-river-of-lethe.png "'Dante and the river of Lethe' by Gustave Doré (1832-1883) / Public Domain")
-# Lethe
 
 > Let fancy still in my sense in Lethe steep;
 > If it be thus to dream, still let me sleep!
 >
-> --<cite>Willian Shakespeare [Twelfth Night]</cite>
-
 > Lethe, the river of oblivion, rolls her watery labyrinth,
 > which whoso drinks forgets both joy and grief"
 >
-> -- <cite>John Milton [Paradise Lost]</cite>
-
 > O sister, mother, wife
 > Sweet Lethe is my life.
 > I am never, never, never coming home!
 >
+> --<cite>Willian Shakespeare [Twelfth Night]</cite>
+> -- <cite>John Milton [Paradise Lost]</cite>
 > -- <cite>Sylvia Plath [Amnesiac]</cite>
+
+# Lethe
 
 Lethe is a tiny and well-simple library/tool for data wiping.
 

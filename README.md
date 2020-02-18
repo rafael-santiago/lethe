@@ -1,6 +1,6 @@
 <table border = 0>
 <tr>
-<td>
+<td width=150>
 <img src="https://github.com/rafael-santiago/lethe/blob/master/etc/gustave-dore-dante-and-the-river-of-lethe.png" title= "'Dante and the river of Lethe' by Gustave Doré (1832-1883) / Public Domain">
 </td>
 <td>

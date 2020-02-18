@@ -1,18 +1,22 @@
-<table border = 0>
+<table style="border:0px solid white">
 <tr>
-<td width=150>
+<td width="150">
 <img src="https://github.com/rafael-santiago/lethe/blob/master/etc/gustave-dore-dante-and-the-river-of-lethe.png" title= "'Dante and the river of Lethe' by Gustave Doré (1832-1883) / Public Domain">
 </td>
 <td>
-> Let fancy still in my sense in Lethe steep;
-> If it be thus to dream, still let me sleep!
-> Lethe, the river of oblivion, rolls her watery labyrinth,
-> which whoso drinks forgets both joy and grief
-> O sister, mother, wife
-> Sweet Lethe is my life.
-> I am never, never, never coming home!
->
-> --<cite>Willian Shakespeare [Twelfth Night], John Milton [Paradise Lost], Sylvia Plath [Amnesiac]</cite>|
+ <blockquote>
+     <p>Let fancy still in my sense in Lethe steep;</p>
+     <p>If it be thus to dream, still let me sleep!</p>
+     <p>Lethe, the river of oblivion, rolls her watery labyrinth,</p>
+     <p>which whoso drinks forgets both joy and grief</p>
+     <p>O sister, mother, wife</p>
+     <p>Sweet Lethe is my life.</p>
+     <p>I am never, never, never coming home!</p>
+     <p></p>
+     <p>
+        <i>-- Willian Shakespeare [Twelfth Night], John Milton [Paradise Lost], Sylvia Plath [Amnesiac]</i>
+     </p>
+ </blockquote>
 </td>
 </tr>
 </table>

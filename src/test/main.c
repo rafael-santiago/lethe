@@ -15,6 +15,7 @@
 #endif
 #include <lethe_drop.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -23,58 +24,23 @@ int stat_call_nr = 0;
 
 int randomizer_call_nr = 0;
 
-static int stat_wrapper(const char *pathname, struct stat *buf) {
-    stat_call_nr++;
-    return stat(pathname, buf);
-}
+static int stat_wrapper(const char *pathname, struct stat *buf);
 
-static unsigned char randomizer_wrapper(void) {
-    randomizer_call_nr++;
-    return lethe_default_randomizer();
-}
+static unsigned char randomizer_wrapper(void);
 
-static char *get_random_printable_buffer(const size_t bytes_total) {
-    static char bytes[] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
-                            't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
-                            'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' };
-    const size_t bytes_nr = sizeof(bytes) / sizeof(bytes[0]);
-    char *buf = (char *) malloc(bytes_total), *bp, *bp_end;
-    if (buf == NULL) {
-        return NULL;
-    }
-    bp = buf;
-    bp_end = bp + bytes_total;
-    while (bp != bp_end) {
-        *bp = bytes[lethe_default_randomizer() % bytes_nr];
-        bp++;
-    }
-    return buf;
-}
+static int has_foremost(void);
 
-static int write_data_to_file(const char *filepath, const char *data, size_t data_size) {
-    FILE *fp;
-    if ((fp = fopen(filepath, "wb")) == NULL) {
-        return 1;
-    }
-    fwrite(data, 1, data_size, fp);
-    fprintf(fp, "\n");
-    fclose(fp);
-    return 0;
-}
+#if defined(__linux__)
+static int has_found_by_foremost(const char *signature, const size_t signature_size, const char *output_dir);
 
-static char *get_ndata_from_file(const char *filepath, const size_t data_size) {
-    FILE *fp;
-    char *data;
-    if ((fp = fopen(filepath, "rb")) == NULL) {
-        return NULL;
-    }
-    if ((data = (char *)malloc(data_size)) == NULL) {
-        return NULL;
-    }
-    fread(data, 1, data_size, fp);
-    fclose(fp);
-    return data;
-}
+static int write_foremost_config(const char *header, const size_t header_size, const char *footer, const size_t footer_size, const char *conf);
+#endif
+
+static char *get_random_printable_buffer(const size_t bytes_total);
+
+static int write_data_to_file(const char *filepath, const char *data, size_t data_size);
+
+static char *get_ndata_from_file(const char *filepath, const size_t data_size);
 
 CUTE_DECLARE_TEST_CASE(lethe_tests_entry);
 
@@ -104,6 +70,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
     char *buf, *temp;
     struct stat st;
     char cmdline[4096];
+    size_t buf_size;
 
     CUTE_ASSERT(lethe_set_stat(NULL) != 0);
     CUTE_ASSERT(lethe_set_stat(stat_wrapper) == 0);
@@ -144,6 +111,78 @@ CUTE_TEST_CASE(lethe_drop_tests)
     CUTE_ASSERT(stat("lethe-lab", &st) != 0);
     CUTE_ASSERT(stat_call_nr > 0);
     CUTE_ASSERT(randomizer_call_nr > 0);
+
+    // INFO(Rafael): Now we will test it against foremost if possible.
+
+    if (has_foremost()) {
+        system("rm -rf recovery");
+        fprintf(stdout, "INFO: Nice, you have Foremost installed. Let's check if it can caught files removed by Lethe.\n"
+                        "      Firstly, we will generate some control data and try to find it with Foremost.\n");
+
+        buf_size = 100010;
+
+        buf = get_random_printable_buffer(buf_size);
+        CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
+        sleep(5);
+        CUTE_ASSERT(system("sync data.txt") == 0);
+        sleep(5);
+
+        CUTE_ASSERT(write_foremost_config(buf, 10, buf + buf_size - 10, 10, "foremost.conf") == 0);
+        CUTE_ASSERT(system("rm -f data.txt") == 0);
+        fprintf(stdout, "      Control data was removed. Now trying to recover it with Foremost... Hold on...\n");
+
+        // INFO(Rafael): This is the control data. Foremost must be able to recover this piece of information.
+        snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i /dev/sda1 -c foremost.conf -o recovery");
+        CUTE_ASSERT(system(cmdline) == 0);
+
+        CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 1);
+
+        fprintf(stdout, "INFO: Nice, control data was actually found by Foremost.\n");
+
+        CUTE_ASSERT(system("rm -rf recovery") == 0);
+        CUTE_ASSERT(remove("foremost.conf") == 0);
+
+        free(buf);
+
+        fprintf(stdout, "      Now we will generate a random data, remove it by using Lethe and try to recover it\n"
+                        "      with Foremost. Wait...\n");
+
+        buf_size = 100010;
+        buf = get_random_printable_buffer(buf_size);
+        CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
+        sleep(5);
+        CUTE_ASSERT(system("sync data.txt") == 0);
+        sleep(5);
+
+        CUTE_ASSERT(write_foremost_config(buf, 10, buf + buf_size - 10, 10, "foremost.conf") == 0);
+
+        CUTE_ASSERT(lethe_drop("data.txt", kLetheDataOblivion | kLetheFileRemove) == 0);
+
+        fprintf(stdout, "      Test data was removed by using Lethe. Now trying to recover it with Foremost... Hold on...\n");
+
+        // INFO(Rafael): This is the test data. Foremost must not be able to recover this piece of information.
+        snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i /dev/sda1 -c foremost.conf -o recovery");
+        CUTE_ASSERT(system(cmdline) == 0);
+
+        CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 0);
+
+        fprintf(stdout, "INFO: Everything looks fine on your system! Foremost could not recover data removed by Lethe ;)\n");
+
+        CUTE_ASSERT(system("rm -rf recovery") == 0);
+        CUTE_ASSERT(remove("foremost.conf") == 0);
+
+        free(buf);
+    } else {
+#if defined(__linux__)
+        fprintf(stdout, "WARN: Unfortunately, was not possible to really ensure if the implemented data wiping is actually\n"
+                        "      working on your system. For doing it you need to install 'Foremost' data recovery tool.\n");
+#else
+        fprintf(stdout, "WARN: Unfortunately, was not possible to really ensure if the implemented data wiping is actually\n"
+                        "      working on your system. Until now, Lethe needs Foremost for doing it, thus it is only\n"
+                        "      available on Linux.\n");
+#endif
+    }
+
 CUTE_TEST_CASE_END
 
 #if defined(LETHE_TOOL)
@@ -315,3 +354,176 @@ CUTE_TEST_CASE(lethe_strglob_tests)
         CUTE_ASSERT(lethe_strglob(tests[t].str, tests[t].pattern) == tests[t].result);
     }
 CUTE_TEST_CASE_END
+
+static int has_foremost(void) {
+#if defined(__linux__)
+    return (system("foremost -V > /dev/null") == 0);
+#else
+    return 0;
+#endif
+}
+
+#if defined(__linux__)
+
+static int has_found_by_foremost(const char *signature, const size_t signature_size, const char *output_dir) {
+    DIR *dir = opendir(output_dir);
+    int has_found = 0;
+    struct dirent *dt;
+    char *filename;
+    struct stat st;
+    FILE *fp;
+    const char *sp, *sp_end;
+    char *data, *d, *d_end, *ld;
+    size_t data_size;
+    char cwd[4096];
+
+    if (dir == NULL) {
+        return 0;
+    }
+
+    getcwd(cwd, sizeof(cwd));
+
+    stat(output_dir, &st);
+
+    if (S_ISDIR(st.st_mode) && chdir(output_dir) != 0) {
+        goto has_found_by_foremost_epilogue;
+    }
+
+    while ((dt = readdir(dir)) != NULL && !has_found) {
+        filename = &dt->d_name[0];
+        if (strcmp(filename, ".") == 0 || strcmp(filename, "..") == 0) {
+            continue;
+        }
+        if (stat(filename, &st) != 0) {
+            continue;
+        }
+        if (S_ISDIR(st.st_mode)) {
+            has_found = has_found_by_foremost(signature, signature_size, filename);
+        } else if (S_ISREG(st.st_mode)) {
+            if ((fp = fopen(filename, "rb")) == NULL) {
+                printf("ERROR: Unable to open '%s'.\n", filename);
+                continue;
+            }
+            fseek(fp, 0L, SEEK_END);
+            data_size = ftell(fp);
+            fseek(fp, 0L, SEEK_SET);
+            if ((data = (char *) malloc(data_size)) != NULL) {
+                fread(data, 1, data_size, fp);
+                d = data;
+                d_end = d + data_size;
+                while (!has_found && d != d_end) {
+                    sp = signature;
+                    sp_end = sp + signature_size;
+                    has_found = 1;
+                    ld = d;
+                    while (has_found && sp != sp_end && d != d_end) {
+                        has_found = (*sp == *d);
+                        sp++;
+                        d++;
+                    }
+                    d = ld + 1;
+                }
+                free(data);
+            }
+            fclose(fp);
+        }
+    }
+
+has_found_by_foremost_epilogue:
+
+    closedir(dir);
+
+    chdir(cwd);
+
+    return has_found;
+}
+
+static int write_foremost_config(const char *header, const size_t header_size, const char *footer, const size_t footer_size, const char *conf) {
+    FILE *fp;
+    const char *d, *d_end;
+
+    if ((fp = fopen(conf, "w")) == NULL) {
+        return 1;
+    }
+
+    fprintf(fp, "txt\ty\t1000000\t");
+
+    d = header;
+    d_end = d + header_size;
+
+    while (d != d_end) {
+        fprintf(fp, "\\x%.2X", *d);
+        d++;
+    }
+
+    fprintf(fp, "\t");
+
+    d = footer;
+    d_end = d + footer_size;
+
+    while (d != d_end) {
+        fprintf(fp, "\\x%.2X", *d);
+        d++;
+    }
+
+    fprintf(fp, "\tASCII\n");
+
+    fclose(fp);
+
+    return 0;
+}
+
+#endif
+
+static int stat_wrapper(const char *pathname, struct stat *buf) {
+    stat_call_nr++;
+    return stat(pathname, buf);
+}
+
+static unsigned char randomizer_wrapper(void) {
+    randomizer_call_nr++;
+    return lethe_default_randomizer();
+}
+
+static char *get_random_printable_buffer(const size_t bytes_total) {
+    static char bytes[] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+                            't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
+                            'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' };
+    const size_t bytes_nr = sizeof(bytes) / sizeof(bytes[0]);
+    char *buf = (char *) malloc(bytes_total), *bp, *bp_end;
+    if (buf == NULL) {
+        return NULL;
+    }
+    bp = buf;
+    bp_end = bp + bytes_total;
+    while (bp != bp_end) {
+        *bp = bytes[lethe_default_randomizer() % bytes_nr];
+        bp++;
+    }
+    return buf;
+}
+
+static int write_data_to_file(const char *filepath, const char *data, size_t data_size) {
+    FILE *fp;
+    if ((fp = fopen(filepath, "wb")) == NULL) {
+        return 1;
+    }
+    fwrite(data, 1, data_size, fp);
+    fprintf(fp, "\n");
+    fclose(fp);
+    return 0;
+}
+
+static char *get_ndata_from_file(const char *filepath, const size_t data_size) {
+    FILE *fp;
+    char *data;
+    if ((fp = fopen(filepath, "rb")) == NULL) {
+        return NULL;
+    }
+    if ((data = (char *)malloc(data_size)) == NULL) {
+        return NULL;
+    }
+    fread(data, 1, data_size, fp);
+    fclose(fp);
+    return data;
+}

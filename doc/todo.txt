@@ -1,9 +1,9 @@
 (A) Implement tool entry point. +Feature
 (A) Implement tool system tests. +Tests
-(A) Found out a way of automating some recovering process (**easily***) and integrating it in tests. +Tests
 (B) Write some 'README'. +Documentation
 (B) Write 'doc/MANUAL.txt'. +Documentation
 (B) Write 'doc/man/lethe.1'. +Documentation
 (C) Install stuff for tool. +Build
 x (A) Finish up 'lethe_drop.c' implementation. +Feature
 x (A) Implement tests. +Tests
+x (A) Find out a way of automating some recovering process (**easily***) and integrating it in tests. +Tests

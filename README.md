@@ -25,7 +25,7 @@
 # Lethe
 
 ``Lethe`` is a tiny and well-simple library/tool for data wiping. In Greek mythology ``Lethe`` is one of the five rivers of
-the ``Hades``. According to the myth, who touch, drink or even take a single ``drop`` from this river will experience a
+``Hades``. According to the myth, who touch, drink or even take a single ``drop`` from this river will experience
 forgetfulness.
 
 ## Okay, tell me the simplest way of cloning this repo, please...
@@ -135,5 +135,15 @@ Now you must add to drop type argument the mask ``kLetheCustomRandomizer``, as f
     }
 ```
 
-**Be careful*** when using ``lethe_drop``, it does not prompt you about remove or not what it has found. After all you are
-taking a drop, right? ;)
+**Be careful** when using ``lethe_drop``, by default it does not prompt you about remove or not what was has found.
+After all you are taking a drop, right? ;)
+
+Anyway, if you want to have the possibility of changing your mind after calling ``lethe_drop``, you must add to the
+drop-type argument ``kLetheUserPrompt`` mask.
+
+```c
+    if (lethe_drop("picture.jpeg",
+                   kLetheDataOblivion | kLetheFileRemove | kLetheUserPrompt) == 0) {
+        printf("done!\n");
+    }
+```

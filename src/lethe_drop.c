@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -151,6 +152,7 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
     struct stat st;
     int fd;
     int blkpad;
+    int c;
 
     if (filepath == NULL) {
         lethe_set_error_code(kLetheErrorNullFile);
@@ -172,6 +174,20 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
 
     if (get_byte == NULL) {
         get_byte = lethe_default_randomizer;
+    }
+
+    if (dtype & kLetheUserPrompt) {
+        c = '?';
+        while (c != 'y' && c != 'n') {
+            fprintf(stdout, "Do you really want to completely remove '%s' [y/n]: ");
+            c = tolower(getchar());
+        }
+
+        if (c == 'n') {
+            fprintf(stdout, "File '%s' was not removed.\n");
+            has_error = 0;
+            goto lethe_do_drop_epilogue;
+        }
     }
 
     if ((dtype & kLetheDataOblivion) && S_ISREG(st.st_mode)) {

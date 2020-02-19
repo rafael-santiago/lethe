@@ -24,7 +24,7 @@
 
 # Lethe
 
-``Lethe`` is a tiny and well-simple library/tool for data wiping. In Greek mithology ``Lethe`` is one of the five rivers of
+``Lethe`` is a tiny and well-simple library/tool for data wiping. In Greek mythology ``Lethe`` is one of the five rivers of
 the ``Hades``. According to the myth, who touch, drink or even take a single ``drop`` from this river will experience a
 forgetfulness.
 

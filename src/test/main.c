@@ -112,75 +112,81 @@ CUTE_TEST_CASE(lethe_drop_tests)
     CUTE_ASSERT(stat_call_nr > 0);
     CUTE_ASSERT(randomizer_call_nr > 0);
 
-    // INFO(Rafael): Now we will test it against foremost if possible.
+    if (CUTE_GET_OPTION("quick-tests") == NULL) {
+        // INFO(Rafael): Now we will test it against foremost if possible.
 
-    if (has_foremost()) {
-        system("rm -rf recovery");
-        fprintf(stdout, "INFO: Nice, you have Foremost installed. Let's check if it can caught files removed by Lethe.\n"
-                        "      Firstly, we will generate some control data and try to find it with Foremost.\n");
+        if (has_foremost()) {
+            system("rm -rf recovery");
+            fprintf(stdout, "INFO: Nice, you have Foremost installed. Let's check if it can caught files removed by Lethe.\n"
+                            "      Firstly, we will generate some control data and try to find it with Foremost.\n");
 
-        buf_size = 100010;
+            buf_size = 100010;
 
-        buf = get_random_printable_buffer(buf_size);
-        CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
-        sleep(5);
-        CUTE_ASSERT(system("sync data.txt") == 0);
-        sleep(5);
+            buf = get_random_printable_buffer(buf_size);
+            CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
+            sleep(5);
+            CUTE_ASSERT(system("sync data.txt") == 0);
+            sleep(5);
 
-        CUTE_ASSERT(write_foremost_config(buf, 10, buf + buf_size - 10, 10, "foremost.conf") == 0);
-        CUTE_ASSERT(system("rm -f data.txt") == 0);
-        fprintf(stdout, "      Control data was removed. Now trying to recover it with Foremost... Hold on...\n");
+            CUTE_ASSERT(write_foremost_config(buf, 10, buf + buf_size - 10, 10, "foremost.conf") == 0);
+            CUTE_ASSERT(system("rm -f data.txt") == 0);
+            fprintf(stdout, "      Control data was removed. Now trying to recover it with Foremost... Hold on...\n");
 
-        // INFO(Rafael): This is the control data. Foremost must be able to recover this piece of information.
-        snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i /dev/sda1 -c foremost.conf -o recovery");
-        CUTE_ASSERT(system(cmdline) == 0);
+            // INFO(Rafael): This is the control data. Foremost must be able to recover this piece of information.
+            snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i /dev/sda1 -c foremost.conf -o recovery");
+            CUTE_ASSERT(system(cmdline) == 0);
 
-        CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 1);
+            CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 1);
 
-        fprintf(stdout, "INFO: Nice, control data was actually found by Foremost.\n");
+            fprintf(stdout, "INFO: Nice, control data was actually found by Foremost.\n");
 
-        CUTE_ASSERT(system("rm -rf recovery") == 0);
-        CUTE_ASSERT(remove("foremost.conf") == 0);
+            CUTE_ASSERT(system("rm -rf recovery") == 0);
+            CUTE_ASSERT(remove("foremost.conf") == 0);
 
-        free(buf);
+            free(buf);
 
-        fprintf(stdout, "      Now we will generate a random data, remove it by using Lethe and try to recover it\n"
-                        "      with Foremost. Wait...\n");
+            fprintf(stdout, "      Now we will generate a random data, remove it by using Lethe and try to recover it\n"
+                            "      with Foremost. Wait...\n");
 
-        buf_size = 100010;
-        buf = get_random_printable_buffer(buf_size);
-        CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
-        sleep(5);
-        CUTE_ASSERT(system("sync data.txt") == 0);
-        sleep(5);
+            buf_size = 100010;
+            buf = get_random_printable_buffer(buf_size);
+            CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
+            sleep(5);
+            CUTE_ASSERT(system("sync data.txt") == 0);
+            sleep(5);
 
-        CUTE_ASSERT(write_foremost_config(buf, 10, buf + buf_size - 10, 10, "foremost.conf") == 0);
+            CUTE_ASSERT(write_foremost_config(buf, 10, buf + buf_size - 10, 10, "foremost.conf") == 0);
 
-        CUTE_ASSERT(lethe_drop("data.txt", kLetheDataOblivion | kLetheFileRemove) == 0);
+            CUTE_ASSERT(lethe_drop("data.txt", kLetheDataOblivion | kLetheFileRemove) == 0);
 
-        fprintf(stdout, "      Test data was removed by using Lethe. Now trying to recover it with Foremost... Hold on...\n");
+            fprintf(stdout, "      Test data was removed by using Lethe. Now trying to recover it with Foremost...\n"
+                            "      Hold on...\n");
 
-        // INFO(Rafael): This is the test data. Foremost must not be able to recover this piece of information.
-        snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i /dev/sda1 -c foremost.conf -o recovery");
-        CUTE_ASSERT(system(cmdline) == 0);
+            // INFO(Rafael): This is the test data. Foremost must not be able to recover this piece of information.
+            snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i /dev/sda1 -c foremost.conf -o recovery");
+            CUTE_ASSERT(system(cmdline) == 0);
 
-        CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 0);
+            CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 0);
 
-        fprintf(stdout, "INFO: Everything looks fine on your system! Foremost could not recover data removed by Lethe ;)\n");
+            fprintf(stdout, "INFO: Everything looks fine on your system!\n"
+                            "      Foremost could not recover data removed by Lethe ;)\n");
 
-        CUTE_ASSERT(system("rm -rf recovery") == 0);
-        CUTE_ASSERT(remove("foremost.conf") == 0);
+            CUTE_ASSERT(system("rm -rf recovery") == 0);
+            CUTE_ASSERT(remove("foremost.conf") == 0);
 
-        free(buf);
-    } else {
+            free(buf);
+        } else {
 #if defined(__linux__)
-        fprintf(stdout, "WARN: Unfortunately, was not possible to really ensure if the implemented data wiping is actually\n"
-                        "      working on your system. For doing it you need to install 'Foremost' data recovery tool.\n");
+            fprintf(stdout, "WARN: Unfortunately, was not possible to really ensure if the implemented data wiping is actually\n"
+                            "      working on your system. For doing it you need to install 'Foremost' data recovery tool.\n");
 #else
-        fprintf(stdout, "WARN: Unfortunately, was not possible to really ensure if the implemented data wiping is actually\n"
-                        "      working on your system. Until now, Lethe needs Foremost for doing it, thus it is only\n"
-                        "      available on Linux.\n");
+            fprintf(stdout, "WARN: Unfortunately, was not possible to really ensure if the implemented data wiping is actually\n"
+                            "      working on your system. Until now, Lethe needs Foremost for doing it, thus it is only\n"
+                            "      available on Linux.\n");
 #endif
+        }
+    } else {
+        fprintf(stdout, "WARN: Some test steps were skipped here.\n");
     }
 
 CUTE_TEST_CASE_END

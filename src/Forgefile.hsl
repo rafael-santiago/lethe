@@ -78,7 +78,14 @@ local function run_tests() : result type none {
         }
         var ftype type list;
         $ftype = hefesto.sys.get_option("forge-type");
-        if (hefesto.sys.run("hefesto --forge-type=" + $ftype.item(0)) != 0) {
+        var test_options type string;
+        $test_options = "--forge-type=" + $ftype.item(0);
+        var quick_tests type list;
+        $quick_tests = hefesto.sys.get_option("quick-tests");
+        if ($quick_tests.count() > 0) {
+            $test_options = $test_options + " --quick-tests";
+        }
+        if (hefesto.sys.run("hefesto " + $test_options) != 0) {
             hefesto.project.abort(1);
         }
         hefesto.sys.cd("..");

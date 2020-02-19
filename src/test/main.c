@@ -195,11 +195,12 @@ CUTE_TEST_CASE_END
 CUTE_TEST_CASE(lethe_option_stuff_tests)
     char *argv[] = {
         "./lethe",
+        "test",
         "--foo=bar",
         "--bar=foo",
         "--foobar"
     };
-    int argc = 4;
+    int argc = 5, a;
     struct option_tests {
         int bool;
         char *option;
@@ -219,7 +220,30 @@ CUTE_TEST_CASE(lethe_option_stuff_tests)
 
     CUTE_ASSERT(lethe_get_bool_option("boom", 0) == 0);
 
+    lethe_option_set_argc_argv(0, argv);
+
+    CUTE_ASSERT(lethe_get_ucmd() == NULL);
+    CUTE_ASSERT(lethe_get_argv(0) == NULL);
+
+    lethe_option_set_argc_argv(1, argv);
+
+    CUTE_ASSERT(lethe_get_ucmd() == NULL);
+    CUTE_ASSERT(lethe_get_argv(0) == NULL);
+
+    lethe_option_set_argc_argv(2, argv);
+
+    data = lethe_get_ucmd();
+    CUTE_ASSERT(data != NULL);
+    CUTE_ASSERT(strcmp(data, "test") == 0);
+    CUTE_ASSERT(lethe_get_argv(0) == NULL);
+    CUTE_ASSERT(lethe_get_argv(1010101) == NULL);
+
     lethe_option_set_argc_argv(argc, argv);
+
+    CUTE_ASSERT(lethe_get_bool_option("test", 0) == 0);
+
+    data = lethe_get_ucmd();
+    CUTE_ASSERT(strcmp(data, "test") == 0);
 
     test = &test_vector[0];
     test_end = test + sizeof(test_vector) / sizeof(test_vector[0]);
@@ -232,6 +256,16 @@ CUTE_TEST_CASE(lethe_option_stuff_tests)
             CUTE_ASSERT(strcmp(data, test->expected_s_value) == 0);
         }
         test++;
+    }
+
+    for (a = 2; a < argc; a++) {
+        data = lethe_get_argv(a - 2);
+        CUTE_ASSERT(data != NULL);
+        CUTE_ASSERT(strcmp(data, argv[a]) == 0);
+    }
+
+    for (a = argc; a < 256; a++) {
+        CUTE_ASSERT(lethe_get_argv(a) == NULL);
     }
 CUTE_TEST_CASE_END
 #endif

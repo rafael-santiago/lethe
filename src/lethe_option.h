@@ -14,4 +14,8 @@ char *lethe_get_option(const char *option, char *default_value);
 
 int lethe_get_bool_option(const char *option, const int default_value);
 
+char *lethe_get_ucmd(void);
+
+char *lethe_get_argv(const int a);
+
 #endif

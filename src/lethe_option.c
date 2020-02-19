@@ -13,9 +13,28 @@ static int g_lethe_option_argc = 0;
 
 static char **g_lethe_option_argv = NULL;
 
+static char *g_lethe_option_ucmd = NULL;
+
+char *lethe_get_ucmd(void) {
+    return g_lethe_option_ucmd;
+}
+
+char *lethe_get_argv(const int a) {
+    if (g_lethe_option_argc == 0 || g_lethe_option_argv == NULL || a >= g_lethe_option_argc) {
+        return NULL;
+    }
+    return &g_lethe_option_argv[a][0];
+}
+
 void lethe_option_set_argc_argv(int argc, char **argv) {
-    g_lethe_option_argc = argc;
-    g_lethe_option_argv = argv;
+    g_lethe_option_ucmd = (argc > 1) ? &argv[1][0] : NULL;
+    g_lethe_option_argc = argc - 2;
+    if (g_lethe_option_argc > 0) {
+        g_lethe_option_argv = &argv[2];
+    } else {
+        g_lethe_option_argc = 0;
+        g_lethe_option_argv = NULL;
+    }
 }
 
 char *lethe_get_option(const char *option, char *default_value) {

@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <signal.h>
 
 struct lethe_tool_commands_ctx {
     const char *ucmd;
@@ -30,14 +31,16 @@ static int do_man_help(void);
 
 static int do_version(void);
 
-static int lethe_exec(char *(*get_ucmd)(void), void (*null_command)(void),
+static int lethe_exec(char *(*get_ucmd)(void), int (*null_command)(void),
                       struct lethe_tool_commands_ctx *commands, const size_t commands_nr);
 
-static void null_command(void);
+static int null_command(void);
 
 static char *get_help_topic(void);
 
-static void null_help_topic(void);
+static int help_banner(void);
+
+static void sigint_watchdog(int sig_nr);
 
 static struct lethe_tool_commands_ctx g_lethe_tool_commands[] = {
     { "drop",    do_drop     },
@@ -55,6 +58,7 @@ static struct lethe_tool_commands_ctx g_lethe_tool_help_topics[] = {
 const char *g_lethe_tool_version = "v1";
 
 int main(int argc, char **argv) {
+    signal(SIGINT | SIGTERM, sigint_watchdog);
     lethe_option_set_argc_argv(argc, argv);
     return lethe_exec(lethe_get_ucmd,
                       null_command,
@@ -62,7 +66,13 @@ int main(int argc, char **argv) {
                       sizeof(g_lethe_tool_commands) / sizeof(g_lethe_tool_commands[0]));
 }
 
-static int lethe_exec(char *(*get_ucmd)(void), void (*null_command)(void),
+static void sigint_watchdog(int sig_nr) {
+    // INFO(Rafael): It will be probably the panic button so let's call exit asap.
+    fprintf(stdout, "Aborted!\n");
+    exit(1);
+}
+
+static int lethe_exec(char *(*get_ucmd)(void), int (*null_command)(void),
                       struct lethe_tool_commands_ctx *commands, const size_t commands_nr) {
     char *ucmd;
     int has_error = 1;
@@ -77,7 +87,7 @@ static int lethe_exec(char *(*get_ucmd)(void), void (*null_command)(void),
     }
 
     if (ucmd == NULL) {
-        null_command();
+        has_error = null_command();
         goto lethe_exec_epilogue;
     }
 
@@ -101,16 +111,26 @@ lethe_exec_epilogue:
     return has_error;
 }
 
-static void null_command(void) {
+static int null_command(void) {
     fprintf(stderr, "Well, what are intending to do? Try to call me again by using help.\n");
+    return 1;
 }
 
 static char *get_help_topic(void) {
     return lethe_get_argv(0);
 }
 
-static void null_help_topic(void) {
-    fprintf(stderr, "Hey human, you need to inform which help topic do you want.\n");
+static int help_banner(void) {
+    fprintf(stdout, "lethe is Copyright (C) 2020 by Rafael Santiago.\n\n"
+                    "Bug reports, feedback, etc: <voidbrainvoid@tutanota.com> or "
+                    "<https://github.com/rafael-santiago/lethe/issues>\n"
+                    "_____\n"
+                    "usage: lethe <command> [options]\n\n"
+                    "*** Are you looking for some quick help topic of a command? Run 'lethe help <command>'.\n"
+                    "    Are you new here? Hi there newbie! What about to read some documentation before you screw "
+                    "something up? Run 'lethe man' and"
+                    "    welcome! ;)\n");
+    return 0;
 }
 
 static int do_drop(void) {
@@ -118,15 +138,16 @@ static int do_drop(void) {
 }
 
 static int do_drop_help(void) {
-    fprintf(stdout, "use: lethe drop <file name list | glob patterns>\n"
-                    "      [--ask-me-nothing |\n"
-                    "       --dym-randomizer=<so-filepath>:<func-name>]\n");
+    fprintf(stdout, "use: lethe drop\n"
+                    "           <file name list | glob patterns>\n"
+                    "           [--ask-me-nothing |\n"
+                    "            --dym-randomizer=<so-filepath>:<func-name>]\n");
     return 0;
 }
 
 static int do_help(void) {
     return lethe_exec(get_help_topic,
-                      null_help_topic,
+                      help_banner,
                       &g_lethe_tool_help_topics[0],
                       sizeof(g_lethe_tool_help_topics) / sizeof(g_lethe_tool_help_topics[0]));
 }

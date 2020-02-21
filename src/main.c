@@ -134,13 +134,53 @@ static int help_banner(void) {
 }
 
 static int do_drop(void) {
-    return 1;
+    int has_error = 1;
+    int overwrite_nr, rename_nr;
+    int a;
+    char *arg;
+    lethe_drop_type dtype;
+    unsigned char (*randomizer)(void) = lethe_default_randomizer;
+
+    if (lethe_set_overwrite_nr(atoi(lethe_get_option("overwrite-nr", "1"))) != 0) {
+        fprintf(stderr, "ERROR: Option --overwrite-nr must be a valid number from 1 up to n.\n");
+        goto do_drop_epilogue;
+    }
+
+    if (lethe_set_rename_nr(atoi(lethe_get_option("rename-nr", "10"))) != 0) {
+        fprintf(stderr, "ERROR:Option --rename-nr must be a valid number from 1 up to n.\n");
+        goto do_drop_epilogue;
+    }
+
+    dtype = kLetheDataOblivion | kLetheFileRemove | kLetheCustomRandomizer |
+            ((~lethe_get_bool_option("ask-me-nothing", 0)) & kLetheUserPrompt);
+
+    a = 0;
+
+    while ((arg = lethe_get_argv(a++)) != NULL) {
+        if (strstr(arg, "--") == arg) {
+            continue;
+        }
+
+        if (has_error != 0) { // INFO(Rafael): At least one well-succeed drop is considered a succeed dropping process.
+            has_error = lethe_drop(arg, dtype, randomizer);
+        }
+    }
+
+do_drop_epilogue:
+
+    if (has_error != 0) {
+        fprintf(stderr, "No such file or directory.\n");
+    }
+
+    return has_error;
 }
 
 static int do_drop_help(void) {
     fprintf(stdout, "use: lethe drop\n"
                     "           <file name list | glob patterns>\n"
                     "           [--ask-me-nothing |\n"
+                    "            --overwrite-nr=<number> |\n"
+                    "            --rename-nr=<number>    |\n"
                     "            --dym-randomizer=<so-filepath>:<func-name>]\n");
     return 0;
 }

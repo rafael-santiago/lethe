@@ -28,6 +28,41 @@
 ``Hades``. According to the myth, who touch, drink or even take a single ``drop`` from this river will experience
 forgetfulness.
 
+This is my implementation of a suggestion given by the worldwide known cryptographer and information security specialist
+Bruce Schneier in his book "Applied Cryptography", about destroying information:
+
+> "Most commercial programs that claim to implement the DoD standard overwrite three times: first with all ones, then with
+> all zeros and finally with a repeating one-zero pattern. Given my general level of paranoia, I recommend overwriting a
+> deleted file seven times: the first time with all ones, the second time with all zeros, and five times with a
+> cryptographically secure pseudo-random sequence. Recent developments at the National Institute of Standards and Technology
+> with electron-tunneling microscopes suggest even that might not be enough. Honestly, if your data is sufficiently valuable,
+> assume that it is *impossible* to erase data completely off magnetic media. Burn or shred the media; it's cheaper to buy
+> media new than lose your secrets."
+>
+> -- Bruce Schneier ["Applied Cryptography" 228-229 pp.]
+
+This book was written at 90's. DoD standard additionaly states that:
+
+> "The number of times an overwrite must be accomplished depends on the storage media, sometimes on its sensitivity, and
+> sometimes on different DoD component requirements."
+>
+> -- National Computer Security Center ["A Guide to Understanding Data Rememberance in Automanted Information Systems"]
+
+Here, overwrite times are configured by the user. Anyway, I think that burn-and-shred advices given by Mr. Schneier should not
+be discarded.
+
+**WARNING**: This general DoD information destroying method does not work with flash based filesystems. It probably will not
+work with your smartphone. Do not use this tool for doing this! Maybe in future I may extend this code to give some kind of
+support for flash stuff too but, by now, I won't do it.
+
+For ensuring that the implemented data destroying here is working fine on your system the well-known forensic tool
+``Foremost`` is used (if you are on ``Linux``, in this case and have it installed). Additionaly, I strongly suggest you to
+build the software on your machine by running all tests before installing the tool or using it as a library into your
+own stuff. Be sure that it is actually working besides just believing on it.
+
+Finally, I am not reponsible for any misuse of information or code here. I am not responsible for any possible damage, data
+destruction or loss (partial or total) done by this software, too. Who knows your babysitter! Use it at your on risk!
+
 ## Okay, tell me the simplest way of cloning this repo, please...
 
 Well,
@@ -69,8 +104,8 @@ By the way, ``Lethe`` is ``GPLv2``. If this license fits to you, for using ``Let
 
 Now, ``lethe_drop`` basically takes two arguments:
 
-    - The filename or a glob pattern.
-    - The drop type.
+- The filename or a glob pattern.
+- The drop type.
 
 Take a look:
 
@@ -135,8 +170,8 @@ Now you must add to drop type argument the mask ``kLetheCustomRandomizer``, as f
     }
 ```
 
-**Be careful** when using ``lethe_drop``, by default it does not prompt you about remove or not what was has found.
-After all you are taking a drop, right? ;)
+**Be careful** when using ``lethe_drop``, by default it does not prompt you about removing or not what was found.
+After all you are taking a drop from Lethe, right? ;)
 
 Anyway, if you want to have the possibility of changing your mind after calling ``lethe_drop``, you must add to the
 drop-type argument ``kLetheUserPrompt`` mask.
@@ -145,5 +180,37 @@ drop-type argument ``kLetheUserPrompt`` mask.
     if (lethe_drop("picture.jpeg",
                    kLetheDataOblivion | kLetheFileRemove | kLetheUserPrompt) == 0) {
         printf("done!\n");
+    }
+```
+
+It is also possible to set some internal components of implemented data wiping system:
+
+- Total of overwrites.
+- Total o file renamings.
+- The used 'stat' function.
+
+Setting total of overwrites:
+
+```c
+    if (lethe_set_overwrite_nr(2) != 0) {
+        fprintf(stderr, "ERROR: Overwrite numbers not set.\n");
+    }
+```
+
+The passed number must be a number from ``1`` up to ``n``.
+
+Setting total of file renamings:
+
+```c
+    if (lethe_set_rename_nr(312) != 0) {
+        fprintf(stderr, "ERROR: Rename numbers not set.\n");
+    }
+```
+
+Setting 'stat' function:
+
+```c
+    if (lethe_set_stat(ur_custom_stat) != 0) {
+        fprintf(stderr, "ERROR: Stat function not set.\n");
     }
 ```

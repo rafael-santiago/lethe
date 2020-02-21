@@ -18,4 +18,6 @@ int lethe_set_rename_nr(const int value);
 
 int lethe_set_stat(lethe_stat func_addr);
 
+int lethe_set_overwrite_nr(const int value);
+
 #endif

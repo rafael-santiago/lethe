@@ -75,6 +75,9 @@ CUTE_TEST_CASE(lethe_drop_tests)
     CUTE_ASSERT(lethe_set_stat(NULL) != 0);
     CUTE_ASSERT(lethe_set_stat(stat_wrapper) == 0);
     CUTE_ASSERT(lethe_set_rename_nr(0) != 0);
+    CUTE_ASSERT(lethe_set_overwrite_nr(-1) != 0);
+    CUTE_ASSERT(lethe_set_overwrite_nr(10203102) == 0);
+    CUTE_ASSERT(lethe_set_overwrite_nr(1) == 0);
     system("rm -rf lethe-lab");
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // WARN(Rafael): At this point do not remove the chdir stuff otherwise you can lose important files.!!

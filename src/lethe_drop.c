@@ -25,6 +25,8 @@ int g_lethe_drop_rename_nr = 10;
 
 lethe_stat g_lethe_stat = stat;
 
+int g_lethe_drop_overwrite_nr = 1;
+
 static char g_lethe_allowed_fname_symbols[] = {
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
@@ -147,12 +149,24 @@ int lethe_set_stat(lethe_stat func_addr) {
     return has_error;
 }
 
+int lethe_set_overwrite_nr(const int value) {
+    int has_error = 1;
+
+    if (value > 0) {
+        g_lethe_drop_overwrite_nr = value;
+        has_error = 0;
+    }
+
+    return has_error;
+}
+
 static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, lethe_randomizer get_byte) {
     int has_error = 1;
     struct stat st;
     int fd;
     int blkpad;
     int c;
+    int o;
 
     if (filepath == NULL) {
         lethe_set_error_code(kLetheErrorNullFile);
@@ -179,12 +193,12 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
     if (dtype & kLetheUserPrompt) {
         c = '?';
         while (c != 'y' && c != 'n') {
-            fprintf(stdout, "Do you really want to completely remove '%s' [y/n]: ");
+            fprintf(stdout, "Do you really want to completely remove '%s' [y/n]: ", filepath);
             c = tolower(getchar());
         }
 
         if (c == 'n') {
-            fprintf(stdout, "File '%s' was not removed.\n");
+            fprintf(stdout, "File '%s' was not removed.\n", filepath);
             has_error = 0;
             goto lethe_do_drop_epilogue;
         }
@@ -202,7 +216,14 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
             blkpad = st.st_blksize - blkpad;
         }
 
-        has_error = fdoblivion(fd, st.st_size + blkpad, get_byte);
+        o = 0;
+
+        do { // WARN(Rafael): Overwrite numbers must be from at least 1 to n. No initial conditional fdoblivion done by 'do { }
+             //               while' will protect against mistakes done by a future sloppy code change. Do not replace it
+             //               with first glance obvious-simplicity of 'while' or 'for', please.
+            has_error = fdoblivion(fd, st.st_size + blkpad, get_byte);
+            o++;
+        } while (o < g_lethe_drop_overwrite_nr);
 
         close(fd);
 
@@ -387,11 +408,13 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
 #define get_curr_fpath(curr, b) ( curr = &ping_pong_paths[b^0x1][0] )
 #define get_last_fpath(last, b) ( last = &ping_pong_paths[b    ][0] )
 
-    do_nr = g_lethe_drop_rename_nr;
+    do_nr = 0;
 
     b = 0;
 
-    while (do_nr-- > 0) {
+    do { // WARN(Rafael): Rename numbers must be from at least 1 to n. No initial conditional rename done by 'do { }
+         //               while' will protect against mistakes done by a future sloppy code change. Do not replace it
+         //               with first glance obvious-simplicity of 'while' or 'for', please.
         get_last_fpath(last_fp, b);
         get_curr_fpath(curr_fp, b);
 
@@ -406,7 +429,8 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
         }
 
         b ^= 0x1;
-    }
+        do_nr++;
+    } while (do_nr < g_lethe_drop_rename_nr);
 
 #undef get_curr_fname
 

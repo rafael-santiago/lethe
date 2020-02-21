@@ -41,7 +41,7 @@ Bruce Schneier in his book "Applied Cryptography", about destroying information:
 >
 > -- Bruce Schneier ["Applied Cryptography" 228-229 pp.]
 
-This book was written at 90's. DoD standard additionaly states that:
+This book was written at 90's. ``DoD`` additionally states that:
 
 > "The number of times an overwrite must be accomplished depends on the storage media, sometimes on its sensitivity, and
 > sometimes on different DoD component requirements."
@@ -51,12 +51,12 @@ This book was written at 90's. DoD standard additionaly states that:
 Here, overwrite times are configured by the user. Anyway, I think that burn-and-shred advices given by Mr. Schneier should not
 be discarded.
 
-**WARNING**: This general DoD information destroying method does not work with flash based filesystems. It probably will not
-work with your smartphone. Do not use this tool for doing this! Maybe in future I may extend this code to give some kind of
-support for flash stuff too but, by now, I won't do it.
+**WARNING**: This general ``DoD`` information destruction method does not work with flash based filesystems. It probably will
+not work with your smartphone. Do not use this tool for doing this! Maybe in future I may extend this code to give some kind of
+support for flash stuff too, but by now, I won't do it.
 
 For ensuring that the implemented data destroying here is working fine on your system the well-known forensic tool
-``Foremost`` is used (if you are on ``Linux``, in this case and have it installed). Additionaly, I strongly suggest you to
+``Foremost`` is used (if you are on ``Linux``, in this case and have it installed). Moreover, I strongly suggest you to
 build the software on your machine by running all tests before installing the tool or using it as a library into your
 own stuff. Be sure that it is actually working besides just believing on it.
 

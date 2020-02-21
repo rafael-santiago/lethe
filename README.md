@@ -61,7 +61,7 @@ build the software on your machine by running all tests before installing the to
 own stuff. Be sure that it is actually working instead of just believing on it.
 
 Finally, I am not reponsible for any misuse of information or code here. I am not responsible for any possible damage, data
-destruction or loss (partial or total) done by this software, too. Who knows your babysitter! Use it at your on risk!
+destruction or loss (partial or total) done by this software, too. Who knows your babysitter! Use it at your own risk!
 
 ## Okay, tell me the simplest way of cloning this repo, please...
 

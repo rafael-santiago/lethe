@@ -55,13 +55,13 @@ be discarded.
 not work with your smartphone. Do not use this tool for doing this! Maybe in future I may extend this code to give some kind of
 support for flash stuff too, but by now, I won't do it.
 
-For ensuring that the implemented data destroying here is working fine on your system the well-known forensic tool
+For ensuring that the implemented data destruction here is working fine on your system the well-known forensic tool
 ``Foremost`` is used (if you are on ``Linux``, in this case and have it installed). Moreover, I strongly suggest you to
 build the software on your machine by running all tests before installing the tool or using it as a library into your
-own stuff. Be sure that it is actually working besides just believing on it.
+own stuff. Be sure that it is actually working instead of just believing on it.
 
 Finally, I am not reponsible for any misuse of information or code here. I am not responsible for any possible damage, data
-destruction or loss (partial or total) done by this software, too. Who knows your babysitter! Use it at your on risk!
+destruction or loss (partial or total) done by this software, too. Who knows your babysitter! Use it at your own risk!
 
 ## Okay, tell me the simplest way of cloning this repo, please...
 

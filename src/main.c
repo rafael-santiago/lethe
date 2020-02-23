@@ -231,7 +231,8 @@ static int do_help(void) {
 }
 
 static int do_help_help(void) {
-    return 1;
+    fprintf(stdout, "use: lethe help <command>\n");
+    return 0;
 }
 
 static int do_man(void) {

@@ -76,7 +76,7 @@ All done.
 
 ## How can I build it?
 
-Lethe's build is based on another tool of mine called Hefesto <https://github.com/rafael-santiago/hefesto>.
+Lethe's build is based on another tool of mine called [Hefesto](https://github.com/rafael-santiago/hefesto).
 After following all steps for making Hefesto works on your system, if you want to build the library:
 
 ```
@@ -85,7 +85,7 @@ After following all steps for making Hefesto works on your system, if you want t
     you@Hades:~/src/lethe/src# _
 ```
 
-If the build succeeds the ar file will be at '../lib/liblethe.a'.
+If the build succeeds the ar file will be at ``../lib/liblethe.a``.
 
 Now, supposing you want the tool:
 
@@ -95,9 +95,105 @@ Now, supposing you want the tool:
     you@Hades:~/src/lethe/src# _
 ```
 
-If the build succeeds the binary will be at '../bin/lethe'.
+If the build succeeds the binary will be at ``../bin/lethe``.
 
-## How to use let into my own stuff?
+## How to use Lethe as a command line tool?
+
+Lethe is a well-simple tool. It works based on commands and command options. The general idea when using lethe from your
+command line is: ``lethe <command> [options]``.
+
+Until now ``lethe`` has the commands listed in **Table 1**.
+
+**Table 1**: Current commands supported.
+
+|**Command**  |           **Utility**                |
+|:-----------:|:------------------------------------:|
+| ``drop``    | Removes files and directories        |
+| ``help``    | Offers quick help guide for commands |
+| ``man``     | Manual reader                        |
+| ``version`` | Displays the tool version            |
+
+### The command ``drop``
+
+It removes files. Its synopsis is: ``lethe drop <file name and/or glob patterns> [options]``.
+
+Supposing you want to remove the file ``thanks-for-nothing.txt`` and all files containing ``crimson-ballroom`` in their names:
+
+```
+    you@Hades:~/tmp# lethe thanks-for-nothing.txt *crimson-ballroom*
+    you@Hades:~/tmp# _
+```
+
+By default ``Lethe`` will ask will if you really want to delete a found file. If you prefer skipping all possible confirmations
+you must use ``--ask-me-nothing`` bool option.
+
+```
+    you@Hades:~/tmp# lethe *make-it-alright* televison-addict* --ask-me-nothing
+    you@Hades:~/tmp# _
+```
+
+The removing process basically consists on repeated overwrites and renames passes. By default you have five overwrite passes
+and ten renaming passes. In order to change them use the options ``--overwrite-passes=<n>`` and/or ``--rename-passes=<n>``.
+The total of passes must be one at least or a greater value. Let's use 200 renaming and 1000 overwrites.
+
+```
+    you@Hades:~/tmp# lethe * --ask-me-nothing --overwrite-passes=1000 --rename-passes=200
+    you@Hades:~/tmp# _
+```
+
+**Warning**: The sample command given above can be dangerous depending on you are testing it. ``Lethe`` always recursively
+removes any found directory. I meant that it will be emptied by using an implicit "*" glob pattern. Be careful when using this
+tool.
+
+The renaming and overwriting stuff uses random data by default provided by the internal ``Lethe's randomizer``. If you prefer
+provide your own randomizer you need to use the option ``--dym-randomizer=<lib-path>:<function-name>``.
+
+Supposing you have a dynamic local library called ``my-awesome-csprng.so``. This library has the function ``mac`` well-exported
+and it is "your awesome csprng":
+
+```
+    you@Hades:~/tmp# lethe [AB]-REPORTS-*-1995.DAT \
+    > --dym-randomizer=my-awesome-csprng.so:mac --ask-me-nothing
+    you@Hades:~/tmp# _
+```
+
+The prototype for a ``Lethe randomizer`` implementation is:
+
+```c
+    unsigned char randomizer(void);
+```
+
+### The command ``man``
+
+It shows the content of this manual at your terminal screen by using your environment pager:
+
+```
+    you@Hades:~/tmp# lethe man
+```
+
+### The command ``help``
+
+Nothing special. You only need to provide as option a command as the help topic:
+
+```
+    you@Hades:~/tmp# lethe help drop
+```
+
+### The command ``version``
+
+It reports the version of your ``Lethe`` binary:
+
+```
+    you@Hades:~/tmp# lethe version
+```
+
+But you can also use ``--version`` if you prefer:
+
+```
+    you@Hades:~/tmp# lethe --version
+```
+
+## How to use Lethe into my own stuff?
 
 By the way, ``Lethe`` is ``GPLv2``. If this license fits to you, for using ``Lethe`` as a library, you only need to include
 ``src/lethe.h`` and "call" ``lethe_drop()``. For building it you need to link your stuff with ``liblethe.a``.

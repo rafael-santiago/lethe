@@ -150,7 +150,7 @@ static int do_drop(void) {
 # error Some code wanted.
 #endif
 
-    if (lethe_set_overwrite_nr(atoi(lethe_get_option("overwrite-passes", "1"))) != 0) {
+    if (lethe_set_overwrite_nr(atoi(lethe_get_option("overwrite-passes", "5"))) != 0) {
         fprintf(stderr, "ERROR: Option --overwrite-passes must be a valid number from 1 up to n.\n");
         goto do_drop_epilogue;
     }

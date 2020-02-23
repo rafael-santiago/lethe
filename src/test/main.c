@@ -179,14 +179,46 @@ CUTE_TEST_CASE(lethe_drop_tests)
             CUTE_ASSERT(remove("foremost.conf") == 0);
 
             free(buf);
+
+            fprintf(stdout, "INFO: Now let's only test data oblivion. File will stay but its content will be forgotten.\n");
+
+            buf_size = 100010;
+            buf = get_random_printable_buffer(buf_size);
+            CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
+            sleep(5);
+            CUTE_ASSERT(system("sync data.txt") == 0);
+            sleep(5);
+
+            fprintf(stdout, "      Test data created... Now let's forget this content by using Lethe... Wait...\n");
+
+            CUTE_ASSERT(write_foremost_config(buf, 10, buf + buf_size - 10, 10, "foremost.conf") == 0);
+
+            CUTE_ASSERT(lethe_drop("data.txt", kLetheDataOblivion) == 0);
+
+            CUTE_ASSERT(stat("data.txt", &st) == 0);
+
+            fprintf(stdout, "      Done. Now trying to recover it with Foremost... Hold on...\n");
+
+            CUTE_ASSERT(stat("data.txt", &st) == 0);
+
+            CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 0);
+
+            fprintf(stdout, "INFO: Nice! Foremost could not recover data forgotten with Lethe ;)\n");
+
+            CUTE_ASSERT(remove("data.txt") == 0);
+            CUTE_ASSERT(system("rm -rf recovery") == 0);
+            CUTE_ASSERT(remove("foremost.conf") == 0);
+
+            free(buf);
         } else {
 #if defined(__linux__)
-            fprintf(stdout, "WARN: Unfortunately, was not possible to really ensure if the implemented data wiping is actually\n"
-                            "      working on your system. For doing it you need to install 'Foremost' data recovery tool.\n");
+            fprintf(stdout, "WARN: Unfortunately, was not possible to really ensure if the implemented data wiping is\n"
+                            "      actually working on your system. For doing it you need to install 'Foremost' data\n"
+                            "      recovery tool.\n");
 #else
-            fprintf(stdout, "WARN: Unfortunately, was not possible to really ensure if the implemented data wiping is actually\n"
-                            "      working on your system. Until now, Lethe needs Foremost for doing it, thus it is only\n"
-                            "      available on Linux.\n");
+            fprintf(stdout, "WARN: Unfortunately, was not possible to really ensure if the implemented data wiping is\n"
+                            "      actually working on your system. Until now, Lethe needs Foremost for doing it, thus\n"
+                            "      it is only available on Linux.\n");
 #endif
         }
     } else {

@@ -98,4 +98,7 @@ local function setup_lists() : result type none {
     $cflags = hefesto.sys.get_option("cflags");
     $libraries = hefesto.sys.get_option("libraries");
     $ldflags = hefesto.sys.get_option("ldflags");
+    if (hefesto.project.name() == "lethe-tool" && hefesto.sys.os_name() == "linux") {
+        $ldflags.add_item("-ldl");
+    }
 }

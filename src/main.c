@@ -11,6 +11,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <signal.h>
+#if defined(__unix__)
+# include <dlfcn.h>
+#endif
 
 struct lethe_tool_commands_ctx {
     const char *ucmd;
@@ -140,19 +143,46 @@ static int do_drop(void) {
     char *arg;
     lethe_drop_type dtype;
     unsigned char (*randomizer)(void) = lethe_default_randomizer;
+    char libpath[4096], *func;
+#if defined(__unix__)
+    void *libdymrandom = NULL;
+#else
+# error Some code wanted.
+#endif
 
-    if (lethe_set_overwrite_nr(atoi(lethe_get_option("overwrite-nr", "1"))) != 0) {
-        fprintf(stderr, "ERROR: Option --overwrite-nr must be a valid number from 1 up to n.\n");
+    if (lethe_set_overwrite_nr(atoi(lethe_get_option("overwrite-passes", "1"))) != 0) {
+        fprintf(stderr, "ERROR: Option --overwrite-passes must be a valid number from 1 up to n.\n");
         goto do_drop_epilogue;
     }
 
-    if (lethe_set_rename_nr(atoi(lethe_get_option("rename-nr", "10"))) != 0) {
-        fprintf(stderr, "ERROR:Option --rename-nr must be a valid number from 1 up to n.\n");
+    if (lethe_set_rename_nr(atoi(lethe_get_option("rename-passes", "10"))) != 0) {
+        fprintf(stderr, "ERROR: Option --rename-passes must be a valid number from 1 up to n.\n");
         goto do_drop_epilogue;
     }
 
     dtype = kLetheDataOblivion | kLetheFileRemove | kLetheCustomRandomizer |
             ((~lethe_get_bool_option("ask-me-nothing", 0)) & kLetheUserPrompt);
+
+    if ((arg = lethe_get_option("dym-randomizer", NULL)) != NULL) {
+        if ((func = strstr(arg, ":")) == NULL) {
+            fprintf(stderr, "ERROR: Randomizer's function name not informed in --dym-randomizer option.\n");
+            goto do_drop_epilogue;
+        }
+
+        memset(libpath, 0, sizeof(libpath));
+        memcpy(libpath, arg, func - arg);
+        func += 1;
+
+        if ((libdymrandom = dlopen(libpath, RTLD_LOCAL)) == NULL) {
+            fprintf(stderr, "ERROR: Unable to open '%s'.\n", libpath);
+            goto do_drop_epilogue;
+        }
+
+        if ((randomizer = (unsigned char (*)(void)) dlsym(libdymrandom, func)) == NULL) {
+            fprintf(stderr, "ERROR: Randomizer function '%s' not found.\n", func);
+            goto do_drop_epilogue;
+        }
+    }
 
     a = 0;
 
@@ -168,6 +198,14 @@ static int do_drop(void) {
 
 do_drop_epilogue:
 
+#if defined(__unix__)
+    if (libdymrandom != NULL) {
+        dlclose(libdymrandom);
+    }
+#else
+# error Some code wanted.
+#endif
+
     if (has_error != 0) {
         fprintf(stderr, "No such file or directory.\n");
     }
@@ -178,9 +216,9 @@ do_drop_epilogue:
 static int do_drop_help(void) {
     fprintf(stdout, "use: lethe drop\n"
                     "           <file name list | glob patterns>\n"
-                    "           [--ask-me-nothing |\n"
-                    "            --overwrite-nr=<number> |\n"
-                    "            --rename-nr=<number>    |\n"
+                    "           [--ask-me-nothing            |\n"
+                    "            --overwrite-passes=<number> |\n"
+                    "            --rename-passes=<number>    |\n"
                     "            --dym-randomizer=<so-filepath>:<func-name>]\n");
     return 0;
 }

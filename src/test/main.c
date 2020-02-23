@@ -149,8 +149,8 @@ CUTE_TEST_CASE(lethe_drop_tests)
 
             free(buf);
 
-            fprintf(stdout, "      Now we will generate a random data, remove it by using Lethe and try to recover it\n"
-                            "      with Foremost. Wait...\n");
+            fprintf(stdout, "      Now we will generate a random piece of data, remove it by using Lethe and try to recover\n"
+                            "      it with Foremost. Wait...\n");
 
             buf_size = 100010;
             buf = get_random_printable_buffer(buf_size);

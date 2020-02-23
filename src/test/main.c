@@ -180,7 +180,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
 
             free(buf);
 
-            fprintf(stdout, "INFO: Now let's only test data oblivion. File will stay but its content will be forgotten.\n");
+            fprintf(stdout, "\nINFO: Now let's only test data oblivion. File will stay but its content will be forgotten.\n");
 
             buf_size = 100010;
             buf = get_random_printable_buffer(buf_size);
@@ -199,7 +199,8 @@ CUTE_TEST_CASE(lethe_drop_tests)
 
             fprintf(stdout, "      Done. Now trying to recover it with Foremost... Hold on...\n");
 
-            CUTE_ASSERT(stat("data.txt", &st) == 0);
+            snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i /dev/sda1 -c foremost.conf -o recovery");
+            CUTE_ASSERT(system(cmdline) == 0);
 
             CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 0);
 

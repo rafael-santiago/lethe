@@ -120,6 +120,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
         // INFO(Rafael): Now we will test it against foremost if possible.
 
         if (has_foremost()) {
+#if defined(__linux__)
             system("rm -rf recovery");
             fprintf(stdout, "INFO: Nice, you have Foremost installed. Let's check if it can caught files removed by Lethe.\n"
                             "      Firstly, we will generate some control data and try to find it with Foremost.\n");
@@ -211,13 +212,14 @@ CUTE_TEST_CASE(lethe_drop_tests)
             CUTE_ASSERT(remove("foremost.conf") == 0);
 
             free(buf);
+#endif
         } else {
 #if defined(__linux__)
-            fprintf(stdout, "WARN: Unfortunately, was not possible to really ensure if the implemented data wiping is\n"
+            fprintf(stdout, "WARN: Unfortunately, this test cannot really ensure if the implemented data wiping is\n"
                             "      actually working on your system. For doing it you need to install 'Foremost' data\n"
                             "      recovery tool.\n");
 #else
-            fprintf(stdout, "WARN: Unfortunately, was not possible to really ensure if the implemented data wiping is\n"
+            fprintf(stdout, "WARN: Unfortunately, this test cannot really ensure if the implemented data wiping is\n"
                             "      actually working on your system. Until now, Lethe needs Foremost for doing it, thus\n"
                             "      it is only available on Linux.\n");
 #endif

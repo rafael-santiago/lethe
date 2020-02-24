@@ -3,6 +3,7 @@
 (B) Write 'doc/MANUAL.txt'. +Documentation
 (B) Write 'doc/man/lethe.1'. +Documentation
 (C) Install stuff for tool. +Build
+x (A) Test build on FreeBSD. +Build
 x (A) Write tool's README. +Documentation
 x (A) Test data oblivion without removing file. +Tests
 x (A) Implement tool entry point. +Feature

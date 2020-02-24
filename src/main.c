@@ -13,6 +13,8 @@
 #include <signal.h>
 #if defined(__unix__)
 # include <dlfcn.h>
+#elif defined(_WIN32)
+# include <windows.h>
 #endif
 
 struct lethe_tool_commands_ctx {
@@ -146,6 +148,8 @@ static int do_drop(void) {
     char libpath[4096], *func;
 #if defined(__unix__)
     void *libdymrandom = NULL;
+#elif defined(_WIN32)
+    HMODULE libdymrandom = NULL;
 #else
 # error Some code wanted.
 #endif
@@ -173,6 +177,7 @@ static int do_drop(void) {
         memcpy(libpath, arg, func - arg);
         func += 1;
 
+#if defined(__unix__)
         if ((libdymrandom = dlopen(libpath, RTLD_LOCAL)) == NULL) {
             fprintf(stderr, "ERROR: Unable to open '%s'.\n", libpath);
             goto do_drop_epilogue;
@@ -182,6 +187,20 @@ static int do_drop(void) {
             fprintf(stderr, "ERROR: Randomizer function '%s' not found.\n", func);
             goto do_drop_epilogue;
         }
+#elif defined(_WIN32)
+        if ((libdymrandom = LoadLibrary(libpath)) == NULL) {
+            fprintf(stderr, "ERROR: Unable to open '%s'.\n", libpath);
+            goto do_drop_epilogue;
+        }
+
+        if ((randomizer = (unsigned char (*)(void)) GetProcAddress(libdymrandom, func)) == NULL) {
+            fprintf(stderr, "ERROR: Randomizer function '%s' not found.\n", func);
+            goto do_drop_epilogue;
+        }
+#else
+# error Some code wanted.
+#endif
+
     }
 
     a = 0;
@@ -201,6 +220,10 @@ do_drop_epilogue:
 #if defined(__unix__)
     if (libdymrandom != NULL) {
         dlclose(libdymrandom);
+    }
+#elif defined(_WIN32)
+    if (libdymrandom != NULL) {
+        FreeLibrary(libdymrandom);
     }
 #else
 # error Some code wanted.

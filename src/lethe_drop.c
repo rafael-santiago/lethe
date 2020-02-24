@@ -20,6 +20,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+#if defined(_WIN32)
+# include <windows.h>
+# include <winioctl.h>
+#endif
 
 int g_lethe_drop_rename_nr = 10;
 
@@ -42,11 +46,21 @@ static void get_rnd_databuf(unsigned char *buf, const size_t size, lethe_randomi
 
 static void get_rnd_filename(char *filename, lethe_randomizer get_byte);
 
+#if defined(__unix__)
 static int fdoblivion(int fd, const size_t fsize, lethe_randomizer get_byte);
+#elif defined(_WIN32)
+static int fdoblivion(HANDLE fd, const size_t fsize, lethe_randomizer get_byte);
+#else
+# error Some code wanted.
+#endif
 
 static int lethe_remove(const char *filepath, lethe_randomizer get_byte);
 
 static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, lethe_randomizer get_byte);
+
+#if defined(_WIN32)
+static size_t get_blksize(const char *path);
+#endif
 
 int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, ...) {
     DIR *dir = NULL;
@@ -160,13 +174,62 @@ int lethe_set_overwrite_nr(const int value) {
     return has_error;
 }
 
+#if defined(_WIN32)
+static size_t get_blksize(const char *path) {
+    char volume[10], ntdevpath[4096], devpath[4096], *vp;
+    ssize_t blksize = 0;
+    HANDLE devhandle = INVALID_HANDLE_VALUE;
+    DISK_GEOMETRY disk_geo_ctx;
+    DWORD dummy;
+
+    if (GetVolumePathName(path, volume, sizeof(volume)) == 0) {
+        goto get_blksize_epilogue;
+    }
+
+    if ((vp = strstr(volume, "\\")) != NULL) {
+        *vp = 0;
+    }
+
+    if (QueryDosDevice(volume, ntdevpath, sizeof(ntdevpath)) == 0) {
+        goto get_blksize_epilogue;
+    }
+
+    snprintf(devpath, sizeof(devpath) - 1, "\\\\.\\GLOBALROOT\\%s", ntdevpath);
+
+    if ((devhandle = CreateFile(devpath, 0,
+                                FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                NULL, OPEN_EXISTING, 0, NULL)) == INVALID_HANDLE_VALUE) {
+        goto get_blksize_epilogue;
+    }
+
+    if (DeviceIoControl(devhandle, IOCTL_DISK_GET_DRIVE_GEOMETRY,
+                        NULL, 0,
+                        &disk_geo_ctx, sizeof(disk_geo_ctx), &dummy, NULL)) {
+        blksize = disk_geo_ctx.BytesPerSector;
+    }
+
+get_blksize_epilogue:
+
+    if (devhandle != INVALID_HANDLE_VALUE) {
+        CloseHandle(devhandle);
+    }
+
+    return blksize;
+}
+#endif
+
 static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, lethe_randomizer get_byte) {
     int has_error = 1;
     struct stat st;
-    int fd;
     int blkpad;
     int c;
     int o;
+#if defined(__unix__)
+    int fd;
+#elif defined(_WIN32)
+    size_t blksize;
+    HANDLE fd;
+#endif
 
     if (filepath == NULL) {
         lethe_set_error_code(kLetheErrorNullFile);
@@ -205,16 +268,41 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
     }
 
     if ((dtype & kLetheDataOblivion) && S_ISREG(st.st_mode)) {
+#if defined(__unix__)
         if ((fd = open(filepath, O_WRONLY | O_SYNC)) == -1) {
             lethe_set_error_code(kLetheErrorOpenHasFailed);
             goto lethe_do_drop_epilogue;
         }
+#elif defined(_WIN32)
+        if ((fd = CreateFile(filepath,
+                             GENERIC_WRITE,
+                             0, NULL,
+                             OPEN_EXISTING,
+                             FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE) {       
+            lethe_set_error_code(kLetheErrorOpenHasFailed);
+            goto lethe_do_drop_epilogue;
+        }
+#else
+# error Some code wanted.
+#endif
 
+#if defined(__unix__)
         // INFO(Rafael): Avoid leaking the original size of the file. The file data will turn into pure gibberish,
         //               anyway, if we can avoid leaking this kind of information, let's do it.
         if ((blkpad = st.st_size % st.st_blksize) > 0) {
             blkpad = st.st_blksize - blkpad;
         }
+#elif defined(_WIN32)
+        if ((blksize = get_blksize(filepath)) > 0) {
+            if ((blkpad = st.st_size % blksize) > 0) {
+                blkpad = blksize - blkpad;
+            }
+        } else {
+            blkpad = 0;
+        }
+#else
+# error Some code wanted.
+#endif
 
         o = 0;
 
@@ -225,7 +313,13 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
             o++;
         } while (o < g_lethe_drop_overwrite_nr);
 
+#if defined(__unix__)
         close(fd);
+#elif defined(_WIN32)
+        CloseHandle(fd);
+#else
+# error Some code wanted.
+#endif
 
         if (has_error != 0) {
             lethe_set_error_code(kLetheErrorDataOblivionHasFailed);
@@ -257,6 +351,7 @@ lethe_do_drop_epilogue:
     return has_error;
 }
 
+#if defined(__unix__)
 static int fdoblivion(int fd, const size_t fsize, lethe_randomizer get_byte) {
     // WARN(Rafael): This ***is not*** a silver bullet because it depends on the current filesystem (and device) in use.
     //               What optimizations it brings and what heuristics it takes advantage to work on.
@@ -337,6 +432,91 @@ fdoblivion_epilogue:
 
     return has_error;
 }
+#elif defined(_WIN32)
+static int fdoblivion(HANDLE fd, const size_t fsize, lethe_randomizer get_byte) {
+    // WARN(Rafael): This ***is not*** a silver bullet because it depends on the current filesystem (and device) in use.
+    //               What optimizations it brings and what heuristics it takes advantage to work on.
+    //               Anyway, I am following the basic idea of the DoD standard. Here we do not want to
+    //               erase every single trace of the related file. Only its content data is relevant.
+    //               Inode infos such as file size, file name and other file metadata are (at first glance)
+    //               negligible for an eavesdropper and us either.
+
+    char *buf = NULL;
+    int has_error = 1;
+    DWORD written;
+
+    // INFO(Rafael): Bit flipping.
+
+    if ((buf = (unsigned char *) malloc(fsize)) == NULL) {
+        goto fdoblivion_epilogue;
+    }
+
+    memset(buf, 0xFF, fsize);
+
+    if (WriteFile(fd, buf, (DWORD)fsize, &written, NULL) == FALSE || written != fsize) {
+        goto fdoblivion_epilogue;
+    }
+
+    FlushFileBuffers(fd);
+
+    if (SetFilePointer(fd, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) {
+        goto fdoblivion_epilogue;
+    }
+
+    memset(buf, 0x00, fsize);
+
+    if (WriteFile(fd, buf, (DWORD)fsize, &written, NULL) == FALSE || written != fsize) {
+        goto fdoblivion_epilogue;
+    }
+
+    FlushFileBuffers(fd);
+
+    if (SetFilePointer(fd, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) {
+        goto fdoblivion_epilogue;
+    }
+
+#define fdoblivion_paranoid_reverie_step(fd, buf, fsize, get_byte, epilogue) {\
+    get_rnd_databuf(buf, fsize, get_byte);\
+    if (WriteFile(fd, buf, (DWORD)fsize, &written, NULL) == FALSE || written != fsize) {\
+        goto epilogue;\
+    }\
+    FlushFileBuffers(fd);\
+    if (SetFilePointer(fd, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER) {\
+        goto epilogue;\
+    }\
+}
+
+    // INFO(Rafael): This step of the implemented data wiping is based on the suggestions given by Bruce Schneier
+    //               in his book Applied Cryptography [228 pp.].
+
+    fdoblivion_paranoid_reverie_step(fd, buf, fsize, get_byte, fdoblivion_epilogue);
+    fdoblivion_paranoid_reverie_step(fd, buf, fsize, get_byte, fdoblivion_epilogue);
+    fdoblivion_paranoid_reverie_step(fd, buf, fsize, get_byte, fdoblivion_epilogue);
+    fdoblivion_paranoid_reverie_step(fd, buf, fsize, get_byte, fdoblivion_epilogue);
+    fdoblivion_paranoid_reverie_step(fd, buf, fsize, get_byte, fdoblivion_epilogue);
+
+#undef fdoblivion_paranoid_reverie_step
+
+    free(buf);
+    buf = NULL;
+
+    has_error = 0;
+
+fdoblivion_epilogue:
+
+    if (buf != NULL) {
+        free(buf);
+    }
+
+    if (has_error) {
+        lethe_set_error_code(kLetheErrorDataOblivionHasFailed);
+    }
+
+    return has_error;
+}
+#else
+# error Some code wanted.
+#endif
 
 static void get_rnd_databuf(unsigned char *buf, const size_t size, lethe_randomizer get_byte) {
     unsigned char *bp, *bp_end;
@@ -393,6 +573,18 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
         filepath_size -= (filepath[filepath_size] == '/');
     }
     while (filepath_size > 0 && filepath[filepath_size] != '/') {
+        filepath_size--;
+    }
+    filepath_size += (filepath_size != 0);
+#elif defined(_WIN32)
+    g_lethe_stat(filepath, &st);
+    if (S_ISDIR(st.st_mode)) {
+        filepath_size = strlen(filepath) - 1;
+        filepath_size -= (filepath[filepath_size] == '\\' ||
+                          filepath[filepath_size] == '/');
+    }
+    while (filepath_size > 0 && filepath[filepath_size] != '\\' &&
+                                filepath[filepath_size] != '/') {
         filepath_size--;
     }
     filepath_size += (filepath_size != 0);

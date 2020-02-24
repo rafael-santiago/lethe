@@ -44,6 +44,34 @@ char *lethe_mkpath(char *buf, const size_t buf_size, const char *a, const size_t
     if (bp != bp_end) {
         memcpy(buf + m + (m > 0), bp, bp_end - bp);
     }
+#elif defined(_WIN32)
+    ap = a;
+    ap_end = a + a_size - (a_size > 0);
+
+    while (ap_end != ap && (*ap_end == '\\' ||
+                            *ap_end == '/')) {
+        ap_end--;
+    }
+
+    m = ap_end - a + (a_size > 0);
+
+    if (m > 0) {
+        memcpy(buf, a, m);
+    }
+
+    bp = b;
+    bp_end = b + b_size;
+
+    while (bp != bp_end && (*bp == '\\' ||
+                            *bp == '/')) {
+        bp++;
+    }
+
+    *(buf + m) = (m > 0 && bp != bp_end) ? '\\' : 0;
+
+    if (bp != bp_end) {
+        memcpy(buf + m + (m > 0), bp, bp_end - bp);
+    }
 #else
 # error Some code wanted.
 #endif

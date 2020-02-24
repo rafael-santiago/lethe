@@ -24,8 +24,8 @@
 
 # Lethe
 
-``Lethe`` is a tiny and well-simple library/tool for data wiping. In Greek mythology ``Lethe`` is one of the five rivers of
-``Hades``. According to the myth, who touch, drink or even take a single ``drop`` from this river will experience
+``Lethe`` is a tiny and well-simple library/tool for data wiping. In Greek mythology ``Lethe`` is one of the five rivers from
+``Hades`` underworld. According to the myth, who touch, drink or even take a single ``drop`` from this river will experience
 forgetfulness.
 
 This is my implementation of a suggestion given by the worldwide known cryptographer and information security specialist
@@ -120,32 +120,34 @@ It removes files. Its synopsis is: ``lethe drop <file name and/or glob patterns>
 Supposing you want to remove the file ``thanks-for-nothing.txt`` and all files containing ``crimson-ballroom`` in their names:
 
 ```
-    you@Hades:~/tmp# lethe thanks-for-nothing.txt *crimson-ballroom*
+    you@Hades:~/tmp# lethe drop thanks-for-nothing.txt *crimson-ballroom*
     you@Hades:~/tmp# _
 ```
 
-By default ``Lethe`` will ask will if you really want to delete a found file. If you prefer skipping all possible confirmations
+By default ``Lethe`` will ask you if do you really want to delete a found file. If you prefer skipping all possible confirmations
 you must use ``--ask-me-nothing`` bool option.
 
 ```
-    you@Hades:~/tmp# lethe *make-it-alright* televison-addict* --ask-me-nothing
+    you@Hades:~/tmp# lethe drop *make-it-alright* televison-addict* \
+    > --ask-me-nothing
     you@Hades:~/tmp# _
 ```
 
 The removing process basically consists on repeated overwrites and renames passes. By default you have five overwrite passes
-and ten renaming passes. In order to change them use the options ``--overwrite-passes=<n>`` and/or ``--rename-passes=<n>``.
-The total of passes must be one at least or a greater value. Let's use 200 renaming and 1000 overwrites.
+and ten renaming passes. In order to change those default values use the options ``--overwrite-passes=<n>`` and/or ``--rename-passes=<n>``.
+The total of passes must be one at least or a greater value. Let's use 200 renaming and 1000 overwrites passes.
 
 ```
-    you@Hades:~/tmp# lethe * --ask-me-nothing --overwrite-passes=1000 --rename-passes=200
+    you@Hades:~/tmp# lethe drop * --ask-me-nothing \
+    > --overwrite-passes=1000 --rename-passes=200
     you@Hades:~/tmp# _
 ```
 
-**Warning**: The sample command given above can be dangerous depending on you are testing it. ``Lethe`` always recursively
+**Warning**: The given sample command can be dangerous depending on where you are testing it. ``Lethe`` always recursively
 removes any found directory. I meant that it will be emptied by using an implicit "*" glob pattern. Be careful when using this
 tool.
 
-The renaming and overwriting stuff uses random data by default provided by the internal ``Lethe's randomizer``. If you prefer
+The renaming and overwriting stuff uses random data. By default those data is provided by the internal ``Lethe's randomizer``. If you prefer
 provide your own randomizer you need to use the option ``--dym-randomizer=<lib-path>:<function-name>``.
 
 Supposing you have a dynamic local library called ``my-awesome-csprng.so``. This library has the function ``mac`` well-exported
@@ -173,7 +175,8 @@ It shows the content of this manual at your terminal screen by using your enviro
 
 ### The command ``help``
 
-Nothing special. You only need to provide as option a command as the help topic:
+Nothing special. It only gives you a quick command synopsis. You only need to provide as option a command as the help topic you
+are looking for:
 
 ```
     you@Hades:~/tmp# lethe help drop

@@ -82,7 +82,13 @@ CUTE_TEST_CASE(lethe_drop_tests)
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // WARN(Rafael): At this point do not remove the chdir stuff otherwise you can lose important files.!!
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#if defined(__unix__)
     CUTE_ASSERT(mkdir("lethe-lab", 0666) == 0);
+#elif defined(_WIN32)
+    CUTE_ASSERT(mkdir("lethe-lab") == 0);
+#else
+# error Some code wanted.
+#endif
     CUTE_ASSERT(chdir("lethe-lab") == 0);
     buf = get_random_printable_buffer(10);
     CUTE_ASSERT(write_data_to_file("data.txt", buf, 10) == 0);
@@ -106,9 +112,21 @@ CUTE_TEST_CASE(lethe_drop_tests)
     free(buf);
     CUTE_ASSERT(write_data_to_file("data.txt", buf, 10) == 0);
     CUTE_ASSERT(stat("data.txt", &st) == 0);
+#if defined(__unix__)
     CUTE_ASSERT(mkdir("sub-dir", 0666) == 0);
+#elif defined(_WIN32)
+    CUTE_ASSERT(mkdir("sub-dir") == 0);
+#else
+# error Some code wanted.
+#endif
     CUTE_ASSERT(write_data_to_file("sub-dir/do-not-forget-the-joker.txt", buf, 10) == 0);
+#if defined(__unix__)
     CUTE_ASSERT(mkdir("sub-dir/empty", 0666) == 0);
+#elif defined(_WIN32)
+    CUTE_ASSERT(mkdir("sub-dir/empty") == 0);
+#else
+# error Some code wanted.
+#endif
     CUTE_ASSERT(chdir("..") == 0);
     CUTE_ASSERT(lethe_drop("lethe-la[b]", kLetheDataOblivion | kLetheFileRemove | kLetheCustomRandomizer,
                            randomizer_wrapper) == 0);
@@ -357,6 +375,7 @@ CUTE_TEST_CASE(lethe_mkpath_tests)
         const char *b;
         const char *expected;
     } test_vector[] = {
+#if defined(__unix__)
         { "Raja", "Haje", "Raja/Haje" },
         { "Raja/", "Haje", "Raja/Haje" },
         { "Raja" , "/Haje", "Raja/Haje" },
@@ -368,6 +387,31 @@ CUTE_TEST_CASE(lethe_mkpath_tests)
         { "", "Haje", "Haje" },
         { "Raja", "", "Raja" },
         { "/", "/", "/" },
+#elif defined(_WIN32)
+        { "Raja", "Haje", "Raja\\Haje" },
+        { "Raja/", "Haje", "Raja\\Haje" },
+        { "Raja" , "/Haje", "Raja\\Haje" },
+        { "Raja/", "/Haje", "Raja\\Haje" },
+        { "Raja/////////", "//////////Haje","Raja\\Haje"},
+        { "Raja////////", "Haje", "Raja\\Haje"},
+        { "Raja", "///////////////////////////////////////////////Haje/", "Raja\\Haje/" },
+        { "/Raja", "Haje", "/Raja\\Haje" },
+        { "", "Haje", "Haje" },
+        { "Raja", "", "Raja" },
+        { "/", "/", "/" },
+        { "Raja\\", "Haje", "Raja\\Haje" },
+        { "Raja" , "/Haje", "Raja\\Haje" },
+        { "Raja\\", "/Haje", "Raja\\Haje" },
+        { "Raja\\\\\\\\\\\\\\\\\\", "\\\\\\\\\\\\\\\\\\\\Haje","Raja\\Haje"},
+        { "Raja\\\\\\\\\\\\\\\\", "Haje", "Raja\\Haje"},
+        { "Raja", "\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\Haje\\", "Raja\\Haje\\" },
+        { "C:\\Raja", "Haje", "C:\\Raja\\Haje" },
+        { "", "Haje", "Haje" },
+        { "Raja", "", "Raja" },
+        { "\\", "\\", "\\" },
+#else
+# error Some code wanted.
+#endif
         { "", "", "" }
     }, *test, *test_end;
     char tiny_buf[1], buf[4096];

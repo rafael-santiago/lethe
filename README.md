@@ -154,7 +154,7 @@ Supposing you have a dynamic local library called ``my-awesome-csprng.so``. This
 and it is "your awesome csprng":
 
 ```
-    you@Hades:~/tmp# lethe [AB]-REPORTS-*-1995.DAT \
+    you@Hades:~/tmp# lethe drop [AB]-REPORTS-*-1995.DAT \
     > --dym-randomizer=my-awesome-csprng.so:mac --ask-me-nothing
     you@Hades:~/tmp# _
 ```

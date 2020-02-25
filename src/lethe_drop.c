@@ -629,7 +629,19 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
 #undef get_curr_fpath
 #undef get_last_fpath
 
+#if defined(__unix__)
     has_error = remove(curr_fp);
+#elif defined(_WIN32)
+    // WARN(Rafael): Due to the fact of WINAPI's choice of zero return for error cases,
+    //               let's use the unix equivalent wrappers, it will polute less the code.
+    if (S_ISREG(st.st_mode)) {
+        has_error = remove(curr_fp);
+    } else if (S_ISDIR(st.st_mode)) {
+        has_error = rmdir(curr_fp);
+    }
+#else
+# error Some code wanted.
+#endif
 
 lethe_remove_epilogue:
 

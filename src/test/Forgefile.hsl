@@ -102,6 +102,20 @@ local function get_lethe_objects(ldflags type list) : result type none {
         $l = $l + 1;
     }
 
+    if (hefesto.sys.os_name() == "windows") {
+        $l = 0;
+        while ($l < $ldflags.count()) {
+            $fpath = $ldflags.item($l);
+            if ($fpath.match(".*\\.o$") == 1) {
+                $fpath = "\"" + $fpath + "\"";
+                $ldflags.del_index($l);
+                $ldflags.add_item($fpath);
+            } else {
+                $l = $l + 1;
+            }
+        }
+    }
+
     hefesto.sys.byref($ldflags);
     hefesto.sys.cd($old_cwd);
 }

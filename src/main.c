@@ -7,6 +7,7 @@
  */
 #include <lethe.h>
 #include <lethe_option.h>
+#include <lethe_ldist.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -46,6 +47,8 @@ static char *get_help_topic(void);
 static int help_banner(void);
 
 static void sigint_watchdog(int sig_nr);
+
+int did_you_mean(const char *ucmd, const int max_distance);
 
 static struct lethe_tool_commands_ctx g_lethe_tool_commands[] = {
     { "drop",    do_drop     },
@@ -105,8 +108,7 @@ static int lethe_exec(char *(*get_ucmd)(void), int (*null_command)(void),
 
     if (cmd != cmd_end) {
         has_error = cmd->task();
-    } else {
-        // TODO(Rafael): Levenshtein distance trinket goes here...
+    } else if (did_you_mean(ucmd, 2) == 0) {
         fprintf(stderr, "ERROR: '%s' is a unknown command. Maybe 'man' command would be more suitable for you, would not?\n",
                         ucmd);
     }
@@ -270,4 +272,45 @@ static int do_man_help(void) {
 static int do_version(void) {
     fprintf(stdout, "lethe-%s\n", g_lethe_tool_version);
     return 0;
+}
+
+int did_you_mean(const char *ucmd, const int max_distance) {
+    int distances[0xFF];
+    size_t d, cmd_nr;
+    int has_some_suggestion = 0, s_nr;
+    struct lethe_tool_commands_ctx *cmd, *cmd_end;
+
+    for (d = 0; d < sizeof(distances) / sizeof(distances[0]); d++) {
+        distances[d] = -1;
+    }
+
+    cmd = &g_lethe_tool_commands[0];
+    cmd_end = cmd + (cmd_nr = sizeof(g_lethe_tool_commands) / sizeof(g_lethe_tool_commands[0]));
+
+    while (cmd != cmd_end) {
+        d = cmd_nr - (cmd_end - cmd);
+        distances[d] = levenshtein_distance(ucmd, cmd->ucmd);
+        has_some_suggestion |= (distances[d] >= 1 && distances[d] <= max_distance);
+        cmd++;
+    }
+
+    if (has_some_suggestion) {
+        s_nr = 0;
+        cmd = &g_lethe_tool_commands[0];
+        fprintf(stderr, "Did you mean ");
+        while (cmd != cmd_end) {
+            d = cmd_nr - (cmd_end - cmd);
+            if (distances[d] >= 1 && distances[d] <= max_distance) {
+                if (s_nr > 0) {
+                    fprintf(stderr, "%s ", ((d + 1) == cmd_nr) ? " or" : ",");
+                }
+                fprintf(stderr, "'%s'", cmd->ucmd);
+                s_nr++;
+            }
+            cmd++;
+        }
+        fprintf(stderr, "?\n");
+    }
+
+    return has_some_suggestion;
 }

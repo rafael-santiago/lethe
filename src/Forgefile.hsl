@@ -54,7 +54,7 @@ liblethe.prologue() {
     while ($s < $src.count()) {
         var impfile type string;
         $impfile = $src.item($s);
-        if ($impfile.match(".*(main\\.c|lethe_option\\.c)$") == 1) {
+        if ($impfile.match(".*(main\\.c|lethe_option\\.c|lethe_ldist\\.c)$") == 1) {
             var filename type string;
             $filename = filenamefrompath($impfile);
             $filename.replace(".c$", ".o");

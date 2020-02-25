@@ -134,7 +134,7 @@ static int help_banner(void) {
                     "_____\n"
                     "usage: lethe <command> [options]\n\n"
                     "*** Are you looking for some quick help topic of a command? Run 'lethe help <command>'.\n"
-                    "    Are you new here? Hi there newbie! What about to read some documentation before you screw "
+                    "    Are you new here? Hi there newbie! What about reading some documentation before you screw "
                     "something up? Run 'lethe man' and"
                     "    welcome! ;)\n");
     return 0;

@@ -48,7 +48,11 @@ static int help_banner(void);
 
 static void sigint_watchdog(int sig_nr);
 
-int did_you_mean(const char *ucmd, const int max_distance);
+static int did_you_mean(const char *ucmd, const int max_distance);
+
+static int has_more(void);
+
+static int has_less(void);
 
 static struct lethe_tool_commands_ctx g_lethe_tool_commands[] = {
     { "drop",    do_drop     },
@@ -261,7 +265,60 @@ static int do_help_help(void) {
 }
 
 static int do_man(void) {
-    return 1;
+    FILE *pager = stdout, *fp = NULL;
+#if defined(__unix__)
+    const char *manpath = "/usr/local/share/lethe/doc/MANUAL.txt";
+#elif defined(_WIN32)
+    const char *manpath = "C:\\lethe\\doc\\MANUAL.txt";
+#else
+# error Some code wanted.
+#endif
+    char *content = NULL;
+    size_t content_size;
+    int has_error = 1;
+
+    if (has_less()) {
+        pager = popen("less", "w");
+    } else if (has_more()) {
+        pager = popen("more", "w");
+    }
+
+    if ((fp = fopen(manpath, "rb")) == NULL) {
+        fprintf(stderr, "ERROR: Unable to find the manual.\n");
+        goto do_man_epilogue;
+    }
+
+    fseek(fp, 0L, SEEK_END);
+    content_size = (size_t) ftell(fp);
+    fseek(fp, 0L, SEEK_SET);
+
+    if ((content = (char *) malloc(content_size + 1)) == NULL) {
+        fprintf(stderr, "ERROR: Not enough memory.\n");
+        goto do_man_epilogue;
+    }
+
+    memset(content, 0, content_size + 1);
+    fread(content, 1, content_size, fp);
+
+    fprintf(pager, "%s", content);
+
+    has_error = 0;
+
+do_man_epilogue:
+
+    if (pager != NULL && pager != stdout) {
+        pclose(pager);
+    }
+
+    if (fp != NULL) {
+        fclose(fp);
+    }
+
+    if (content != NULL) {
+        free(content);
+    }
+
+    return has_error;
 }
 
 static int do_man_help(void) {
@@ -274,7 +331,7 @@ static int do_version(void) {
     return 0;
 }
 
-int did_you_mean(const char *ucmd, const int max_distance) {
+static int did_you_mean(const char *ucmd, const int max_distance) {
     int distances[0xFF];
     size_t d, cmd_nr;
     int has_some_suggestion = 0, s_nr;
@@ -313,4 +370,22 @@ int did_you_mean(const char *ucmd, const int max_distance) {
     }
 
     return has_some_suggestion;
+}
+
+static int has_tool(const char *cmd) {
+    FILE *p = popen(cmd, "r");
+    int has = 0;
+    if (p != NULL) {
+        has = 1;
+        pclose(p);
+    }
+    return has;
+}
+
+static int has_more(void) {
+    return has_tool("more --version");
+}
+
+static int has_less(void) {
+    return has_tool("less --version");
 }

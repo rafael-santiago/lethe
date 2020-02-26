@@ -1,0 +1,135 @@
+#
+#                          Copyright (C) 2020 by Rafael Santiago
+#
+# Use of this source code is governed by GPL-v2 license that can
+# be found in the COPYING file.
+#
+
+include ~/fsutil.hsl
+
+function installer() : result type none {
+    var option type list;
+
+    $option = hefesto.sys.get_option("install");
+
+    if ($option.count() > 0) {
+        hefesto.project.abort(do_install());
+    }
+
+    $option = hefesto.sys.get_option("uninstall");
+
+    if ($option.count() > 0) {
+        hefesto.project.abort(do_uninstall());
+    }
+}
+
+local function do_install() : result type int {
+    var src type list;
+
+    if (hefesto.sys.os_name() != "windows") {
+        $src.add_item("../doc/MANUAL.txt");
+        $src.add_item("../doc/lethe.1");
+        $src.add_item("../bin/lethe");
+    } else {
+        $src.add_item("../doc/MANUAL.txt");
+        $src.add_item("../bin/lethe.exe");
+    }
+
+    var dest type list;
+
+    if (hefesto.sys.os_name() != "windows") {
+        $dest.add_item("/usr/local/share/lethe/doc/MANUAL.txt");
+        $dest.add_item("/usr/local/man/man1/lethe.1");
+        $dest.add_item("/usr/local/bin/lethe");
+    } else {
+        $dest.add_item("C:\\lethe\\doc\\MANUAL.txt");
+        $dest.add_item("C:\\lethe\\bin\\lethe.exe");
+    }
+
+    var has_error type int;
+
+    $has_error = 0;
+
+    var s type int;
+
+    $s = 0;
+    while ($s < $src.count() && $has_error == 0) {
+        var destpath type string;
+        $destpath = $dest.item($s);
+        $destpath = pathfromfilepath($destpath);
+        if (isdir($destpath) == 0 && mktree($destpath) == 0) {
+            $has_error = 0;
+            hefesto.sys.echo("ERROR: Unable to create path '" + $destpath + "'.\n");
+        } else {
+            if (hefesto.sys.cp($src.item($s), $dest.item($s)) != 1) {
+                hefesto.sys.echo("ERROR: Unable to copy '" + $dest.item($s) + "'.\n");
+                $has_error = 1;
+            }
+        }
+        $s = $s + 1;
+    }
+
+    if ($has_error == 0) {
+        hefesto.sys.echo("INFO: Installed.\n");
+    } else {
+        hefesto.sys.echo("ERROR: Not installed.\n");
+    }
+
+    result $has_error;
+}
+
+local function do_uninstall() : result type int {
+    var burn_list type list;
+
+    if (hefesto.sys.os_name() != "windows") {
+        $burn_list.add_item("/usr/local/share/lethe/doc/MANUAL.txt");
+        $burn_list.add_item("/usr/local/share/lethe/doc");
+        $burn_list.add_item("/usr/local/share/lethe");
+        $burn_list.add_item("/usr/local/man/man1/lethe.1");
+        $burn_list.add_item("/usr/local/bin/lethe");
+    } else {
+        $burn_list.add_item("C:\\lethe\\doc\\MANUAL.txt");
+        $burn_list.add_item("C:\\lethe\\bin\\lethe.exe");
+        $burn_list.add_item("C:\\lethe\\doc");
+        $burn_list.add_item("C:\\lethe\\bin");
+        $burn_list.add_item("C:\\lethe");
+    }
+
+    var error_nr type int;
+
+    $error_nr = 0;
+
+    var b type int;
+
+    $b = 0;
+
+    while ($b < $burn_list.count()) {
+        var filepath type string;
+        $filepath = $burn_list.item($b);
+        if (isdir($filepath)) {
+            if (hefesto.sys.rmdir($filepath) != 0) {
+                hefesto.sys.echo("ERROR: Unable to remove '" + $filepath + "'. Try to do it by hand.\n");
+                $error_nr = $error_nr + 1;
+            }
+        } else if (hefesto.sys.rm($filepath) != 0) {
+            hefesto.sys.echo("ERROR: Unable to remove '" + $filepath + "'. Try to do it by hand.\n");
+            $error_nr = $error_nr + 1;
+        }
+        $b = $b + 1;
+    }
+
+    var has_error type int;
+
+    if ($error_nr == $burn_list.count()) {
+        hefesto.sys.echo("\nINFO: Nothing was removed. Uninstall has failed.\n");
+        $has_error = 1;
+    } else if ($error_nr == 0) {
+        hefesto.sys.echo("INFO: Uninstalled.\n");
+        $has_error = 0;
+    } else {
+        hefesto.sys.echo("\nINFO: Uninstall was done, but some files were kept. Remove them by yourself.\n");
+        $has_error = 0;
+    }
+
+    result 0;
+}

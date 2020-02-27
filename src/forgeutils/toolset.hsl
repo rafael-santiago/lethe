@@ -12,7 +12,6 @@ include ~/toolsets/clang/clang-app.hsl
 include ~/toolsets/null/null.hsl
 include ~/toolsets/common/utils/lang/c/dependency_scanner.hsl
 include ~/lsutil.hsl
-include forgeutils/install.hsl
 
 function get_app_toolset() : result type string {
     result get_toolset() + "-c-app";

@@ -6,6 +6,7 @@
 #
 
 include forgeutils/toolset.hsl
+include forgeutils/install.hsl
 include ~/fsutil.hsl
 
 local var src type list;

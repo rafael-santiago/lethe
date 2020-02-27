@@ -34,19 +34,23 @@ lethe-tests.prologue() {
     $libraries = hefesto.sys.get_option("libraries");
     $ldflags = hefesto.sys.get_option("ldflags");
     if (hefesto.sys.os_name() == "linux") {
+        $includes.add_item("/usr/include");
         $libraries.add_item("usr/lib");
         $ldflags.add_item("-lpthread");
         $ldflags.add_item("-ldl");
     } else if (hefesto.sys.os_name() == "freebsd" ||
                hefesto.sys.os_name() == "netbsd"  ||
                hefesto.sys.os_name() == "openbsd") {
+        $includes.add_item("usr/include");
         $libraries.add_item("usr/lib");
         $ldflags.add_item("-lexecinfo");
         $ldflags.add_item("-lpthread");
     } else if (hefesto.sys.os_name() == "minix") {
+        $includes.add_item("usr/include");
         $libraries.add_item("usr/lib");
         $ldflags.add_item("-lexecinfo");
     } else if (hefesto.sys.os_name() == "solaris") {
+        $includes.add_item("usr/include");
         $libraries.add_item("usr/lib");
         $ldflags.add_item("-lpthread");
         $cflags.add_item("-DNO_CUTEST_BACKTRACING=1");

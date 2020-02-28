@@ -6,6 +6,7 @@
  *
  */
 #include <lethe_error.h>
+#include <string.h>
 #include <stdio.h>
 
 int g_lethe_err;
@@ -17,7 +18,11 @@ void lethe_set_error_code(const lethe_error_code code) {
 }
 
 void lethe_set_last_filepath(const char *filepath) {
-    snprintf(g_lethe_filepath, sizeof(g_lethe_filepath) - 1, "%s", filepath);
+    if (filepath != NULL) {
+        snprintf(g_lethe_filepath, sizeof(g_lethe_filepath) - 1, "%s", filepath);
+    } else {
+        memset(g_lethe_filepath, 0, sizeof(g_lethe_filepath));
+    }
 }
 
 char *lethe_get_last_error(char *buf, const size_t buf_size) {

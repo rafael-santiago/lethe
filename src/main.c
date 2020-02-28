@@ -139,7 +139,7 @@ static int help_banner(void) {
                     "usage: lethe <command> [options]\n\n"
                     "*** Are you looking for some quick help topic of a command? Run 'lethe help <command>'.\n"
                     "    Are you new here? Hi there newbie! What about reading some documentation before you screw "
-                    "something up? Run 'lethe man' and"
+                    "something up? Run 'lethe man' and\n"
                     "    welcome! ;)\n");
     return 0;
 }

@@ -561,8 +561,8 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
         goto lethe_remove_epilogue;
     }
 
-    snprintf(ping_pong_paths[0], sizeof(ping_pong_paths[0]), "%s", filepath);
-    snprintf(ping_pong_paths[1], sizeof(ping_pong_paths[1]), "%s", filepath);
+    snprintf(ping_pong_paths[0], sizeof(ping_pong_paths[0]) - 1, "%s", filepath);
+    snprintf(ping_pong_paths[1], sizeof(ping_pong_paths[1]) - 1, "%s", filepath);
 
     filepath_size -= 1;
 

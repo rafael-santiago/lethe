@@ -166,6 +166,10 @@ The prototype for a ``Lethe randomizer`` implementation is:
     unsigned char randomizer(void);
 ```
 
+If during a drop process you regret about your remove choices, try to hit ``CTRL + c`` as soon as possible. It will prevent of
+removing more files by aborting the application. You can also interrupt lethe by sending a ``SIGINT`` or ``SIGTERM`` to its
+process.
+
 ### The command ``man``
 
 It shows the content of this manual at your terminal screen by using your environment pager:

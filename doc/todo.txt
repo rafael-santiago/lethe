@@ -1,5 +1,6 @@
-(A) Implement tool system tests. +Tests
+(A) Test --dym-randomizer. +Tests
 (B) Detect path to device for tests against Foremost. +Tests
+x (A) Implement tool system tests. +Tests
 x (B) Test build on Solaris. Adjust anything if necessary. +Build
 x (B) Test build on NetBSD. Adjust anything if necessary. +Build
 x (B) Test build on MINIX. Adjust anything if necessary. +Build

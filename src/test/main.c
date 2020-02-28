@@ -42,6 +42,8 @@ static int write_data_to_file(const char *filepath, const char *data, size_t dat
 
 static char *get_ndata_from_file(const char *filepath, const size_t data_size);
 
+static int lethe(const char *command, const char *user_choices);
+
 CUTE_DECLARE_TEST_CASE(lethe_tests_entry);
 
 CUTE_DECLARE_TEST_CASE(lethe_strglob_tests);
@@ -52,6 +54,7 @@ CUTE_DECLARE_TEST_CASE(lethe_error_stuff_tests);
 CUTE_DECLARE_TEST_CASE(lethe_option_stuff_tests);
 #endif
 CUTE_DECLARE_TEST_CASE(lethe_drop_tests);
+CUTE_DECLARE_TEST_CASE(lethe_tool_poke_tests);
 
 CUTE_MAIN(lethe_tests_entry)
 
@@ -64,6 +67,64 @@ CUTE_TEST_CASE(lethe_tests_entry)
     CUTE_RUN_TEST(lethe_option_stuff_tests);
 #endif
     CUTE_RUN_TEST(lethe_drop_tests);
+#if defined(LETHE_TOOL)
+    CUTE_RUN_TEST(lethe_tool_poke_tests);
+#endif
+CUTE_TEST_CASE_END
+
+CUTE_TEST_CASE(lethe_tool_poke_tests)
+    struct stat st;
+
+    CUTE_ASSERT(lethe("help", NULL) == 0);
+    CUTE_ASSERT(lethe("help drop", NULL) == 0);
+    CUTE_ASSERT(lethe("help man", NULL) == 0);
+    CUTE_ASSERT(lethe("help version", NULL) != 0);
+
+#if defined(__unix__)
+    CUTE_ASSERT(mkdir("lethe-tool-poking", 0666) == 0);
+    CUTE_ASSERT(mkdir("lethe-tool-poking/villains", 0666) == 0);
+#elif defined(_WIN32)
+    CUTE_ASSERT(mkdir("lethe-tool-poking") == 0);
+    CUTE_ASSERT(mkdir("lethe-tool-poking\\villains") == 0);
+#else
+# error Some code wanted.
+#endif
+
+    CUTE_ASSERT(chdir("lethe-tool-poking") == 0);
+
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.txt", "It does not matter now", 22) == 0);
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.png", "It does not matter now", 22) == 0);
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.gif", "It does not matter now", 22) == 0);
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.jpg", "It does not matter now", 22) == 0);
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.dat", "It does not matter now", 22) == 0);
+
+    CUTE_ASSERT(write_data_to_file("Domesticated-Animals.txt", "Today is the day...", 19) == 0);
+
+    CUTE_ASSERT(write_data_to_file("villains/Fortress.txt", "Your head is like a fortress", 28) == 0);
+
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.txt", "Y") == 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.png", "n") == 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.gif", "y") == 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.jpg", "N") == 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.dat", "y") == 0);
+
+    CUTE_ASSERT(stat("The-Way-You-Used-To-Do.txt", &st) != 0);
+    CUTE_ASSERT(stat("The-Way-You-Used-To-Do.png", &st) == 0);
+    CUTE_ASSERT(stat("The-Way-You-Used-To-Do.gif", &st) != 0);
+    CUTE_ASSERT(stat("The-Way-You-Used-To-Do.jpg", &st) == 0);
+    CUTE_ASSERT(stat("The-Way-You-Used-To-Do.dat", &st) != 0);
+
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.txt", "It does not matter now", 22) == 0);
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.gif", "It does not matter now", 22) == 0);
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.dat", "It does not matter now", 22) == 0);
+
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.* Domesticated-Animals.txt villains/* --ask-me-nothing", NULL) == 0);
+
+    chdir("..");
+
+    CUTE_ASSERT(lethe("drop lethe-*-poking --ask-me-nothing", NULL) == 0);
+
+    // TODO(Rafael): Test '--dym-randomizer=so:func'.
 CUTE_TEST_CASE_END
 
 CUTE_TEST_CASE(lethe_drop_tests)
@@ -649,4 +710,54 @@ static char *get_ndata_from_file(const char *filepath, const size_t data_size) {
     fread(data, 1, data_size, fp);
     fclose(fp);
     return data;
+}
+
+static int lethe(const char *command, const char *user_choices) {
+    FILE *fp;
+#if defined(__unix__)
+    const char *binary_path = "bin/lethe";
+#elif defined(_WIN32)
+    const char *binary_path = "bin\\lethe.exe";
+#else
+# error Some code wanted.
+#endif
+    char *usr_inputs = "";
+    char execline[4096];
+    char indirections[4096];
+    int exit_code;
+    struct stat st;
+
+    if (user_choices != NULL) {
+        if ((fp = fopen(".lethe_usr_inputs", "wb")) == NULL) {
+            fprintf(stderr, "Unable to create '.lethe_usr_inputs'.\n");
+            return 1;
+        }
+        fprintf(fp, "%s\n", user_choices);
+        fclose(fp);
+        usr_inputs = " < .lethe_usr_inputs";
+    }
+
+    memset(indirections, 0, sizeof(indirections));
+
+#if defined(__unix__)
+    do {
+        strcat(indirections, "../");
+        snprintf(execline, sizeof(execline) - 1, "%sbin/lethe", indirections);
+    } while (stat(execline, &st) != 0);
+#elif defined(_WIN32)
+    do {
+        strcat(indirections, "..\\");
+        snprintf(execline, sizeof(execline) - 1, "%sbin\\lethe.exe", indirections);
+    } while (stat(execline, &st) != 0) {
+#else
+# error Some code wanted.
+#endif
+
+    snprintf(execline, sizeof(execline) - 1, "%s%s %s %s", indirections, binary_path, command, usr_inputs);
+
+    exit_code = system(execline);
+
+    remove(".lethe_usr_inputs");
+
+    return exit_code;
 }

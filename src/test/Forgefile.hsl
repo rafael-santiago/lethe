@@ -34,24 +34,16 @@ lethe-tests.prologue() {
     $libraries = hefesto.sys.get_option("libraries");
     $ldflags = hefesto.sys.get_option("ldflags");
     if (hefesto.sys.os_name() == "linux") {
-        $includes.add_item("/usr/include");
-        $libraries.add_item("usr/lib");
         $ldflags.add_item("-lpthread");
         $ldflags.add_item("-ldl");
     } else if (hefesto.sys.os_name() == "freebsd" ||
                hefesto.sys.os_name() == "netbsd"  ||
                hefesto.sys.os_name() == "openbsd") {
-        $includes.add_item("usr/include");
-        $libraries.add_item("usr/lib");
         $ldflags.add_item("-lexecinfo");
         $ldflags.add_item("-lpthread");
     } else if (hefesto.sys.os_name() == "minix") {
-        $includes.add_item("usr/include");
-        $libraries.add_item("usr/lib");
         $ldflags.add_item("-lexecinfo");
     } else if (hefesto.sys.os_name() == "solaris") {
-        $includes.add_item("usr/include");
-        $libraries.add_item("usr/lib");
         $ldflags.add_item("-lpthread");
         $cflags.add_item("-DNO_CUTEST_BACKTRACING=1");
     }
@@ -59,6 +51,16 @@ lethe-tests.prologue() {
     $appname = "lethe-tests";
     if (hefesto.sys.os_name() == "windows") {
         $appname = $appname + ".exe";
+    } else {
+        if (isdir("/usr/lib")) {
+            $libraries.add_item("/usr/lib");
+        }
+        if (isdir("/usr/local/lib")) {
+            $libraries.add_item("/usr/local/lib");
+        }
+        if (isdir("/usr/local/include")) {
+            $includes.add_item("/usr/local/include");
+        }
     }
     var option type list;
     $option = hefesto.sys.get_option("forge-type");

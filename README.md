@@ -26,7 +26,8 @@
 
 ``Lethe`` is a tiny and well-simple library/tool for data wiping. In Greek mythology ``Lethe`` is one of the five rivers from
 ``Hades`` underworld. According to the myth, who touch, drink or even take a single ``drop`` from this river will experience
-forgetfulness.
+forgetfulness. You can use this data wiping tool on ``Linux``, ``FreeBSD``, ``NetBSD``, ``MINIX``, ``OpenBSD`` , ``Solaris``
+and ``Windows``.
 
 This is my implementation of a suggestion given by the worldwide known cryptographer and information security specialist
 Bruce Schneier in his book "Applied Cryptography", about destroying information:

@@ -101,7 +101,7 @@ any found directory. I meant that it will be emptied by using an implicit "*" gl
 tool.
 
 The renaming and overwriting stuff uses random data. By default those data is provided by the internal Lethe's randomizer.
-If you prefer provide your own randomizer you need to use the option --dym-randomizer=<lib-path>:<function-name>.
+If you prefer providing your own randomizer you need to use the option --dym-randomizer=<lib-path>:<function-name>.
 
 Supposing you have a dynamic local library called "my-awesome-csprng.so". This library has the function "mac"
 well-exported and it is "your awesome csprng":

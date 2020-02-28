@@ -217,6 +217,8 @@ static int do_drop(void) {
 
         if (has_error != 0) { // INFO(Rafael): At least one well-succeed drop is considered a succeed dropping process.
             has_error = lethe_drop(arg, dtype, randomizer);
+        } else {
+            lethe_drop(arg, dtype, randomizer);
         }
     }
 

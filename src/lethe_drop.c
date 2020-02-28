@@ -65,19 +65,37 @@ static size_t get_blksize(const char *path);
 int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, ...) {
     DIR *dir = NULL;
     int has_error = 1;
-    char cwd[4096];
+    char cwd[4096], old_cwd[4096];
     size_t cwd_size, filename_size;
     struct dirent *dt;
     char fullpath[4096], *filename;
+    const char *p;
     struct stat st;
     lethe_randomizer get_byte = lethe_default_randomizer;
     va_list ap;
     int drop_nr = 0;
+    int has_ldir = 0;
+
+    if (pattern == NULL) {
+        goto lethe_drop_pattern_epilogue;
+    }
 
     if (dtype & kLetheCustomRandomizer) {
         va_start(ap, dtype);
         get_byte = va_arg(ap, lethe_randomizer);
     }
+
+    if (g_lethe_stat(pattern, &st) == 0) {
+        // INFO(Rafael): Literal file names will directly be removed.
+        if (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode)) {
+            if ((has_error = lethe_do_drop(pattern, dtype, get_byte)) == 0) {
+                drop_nr = 1;
+            }
+        }
+        goto lethe_drop_pattern_epilogue;
+    }
+
+    // INFO(Rafael): It is a glob pattern. Let's try to match it.
 
     lethe_set_last_filepath(".");
 
@@ -88,9 +106,55 @@ int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, ...) {
 
     cwd_size = strlen(cwd);
 
-    lethe_set_last_filepath(cwd);
+#if defined(__unix__)
+    has_ldir = (strstr(pattern, "/") != NULL);
+#elif defined(_WIN32)
+    has_ldir = (strstr(pattern, "/") != NULL || strstr(pattern, "\\") != NULL);
+#else
+# error Some code wanted.
+#endif
 
-    if ((dir = opendir(cwd)) == NULL) {
+    memset(fullpath, 0, sizeof(fullpath));
+
+    if (has_ldir) {
+        // INFO(Rafael): It seems to have some literal directory indication.
+        p = pattern + strlen(pattern) - 1;
+#if defined(__unix__)
+        while (p != pattern && *p != '/') {
+            p--;
+        }
+#elif defined(_WIN32)
+        while (p != pattern && *p != '\\' &&
+                               *p != '/') {
+            p--;
+        }
+#else
+# error Some code wanted.
+#endif
+        memcpy(fullpath, pattern, p - pattern);
+        if (g_lethe_stat(fullpath, &st) != 0 || !S_ISDIR(st.st_mode)) {
+            p = pattern;
+            snprintf(fullpath, sizeof(fullpath) - 1, "%s", cwd);
+            has_ldir = 0;
+        } else {
+            snprintf(old_cwd, sizeof(old_cwd) - 1, "%s", cwd);
+            snprintf(cwd, sizeof(cwd) - 1, "%s", fullpath);
+#if defined(__unix__)
+            p += (*p == '/');
+#elif defined(_WIN32)
+            p += (*p == '\\' || *p == '/');
+#else
+# error Some code wanted.
+#endif
+        }
+    } else {
+        p = pattern;
+        snprintf(fullpath, sizeof(fullpath) - 1, "%s", cwd);
+    }
+
+    lethe_set_last_filepath(fullpath);
+
+    if ((dir = opendir(fullpath)) == NULL) {
         lethe_set_error_code(kLetheErrorUnableToAccess);
         goto lethe_drop_pattern_epilogue;
     }
@@ -106,7 +170,7 @@ int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, ...) {
 
         filename_size = strlen(filename);
 
-        if (lethe_strglob(filename, pattern)) {
+        if (lethe_strglob(filename, p)) {
             lethe_set_last_filepath(filename);
 
             if (lethe_mkpath(fullpath, sizeof(fullpath), cwd, cwd_size, filename, filename_size) == NULL) {
@@ -127,7 +191,11 @@ lethe_drop_pattern_epilogue:
         closedir(dir);
     }
 
-    chdir(cwd);
+    if (!has_ldir) {
+        chdir(cwd);
+    } else {
+        chdir(old_cwd);
+    }
 
     if (dtype & kLetheCustomRandomizer) {
         va_end(ap);

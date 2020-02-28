@@ -360,7 +360,7 @@ static int fdoblivion(int fd, const size_t fsize, lethe_randomizer get_byte) {
     //               Inode infos such as file size, file name and other file metadata are (at first glance)
     //               negligible for an eavesdropper and us either.
 
-    char *buf = NULL;
+    unsigned char *buf = NULL;
     int has_error = 1;
 
     // INFO(Rafael): Bit flipping.
@@ -441,7 +441,7 @@ static int fdoblivion(HANDLE fd, const size_t fsize, lethe_randomizer get_byte) 
     //               Inode infos such as file size, file name and other file metadata are (at first glance)
     //               negligible for an eavesdropper and us either.
 
-    char *buf = NULL;
+    unsigned char *buf = NULL;
     int has_error = 1;
     DWORD written;
 

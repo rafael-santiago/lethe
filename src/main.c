@@ -113,8 +113,7 @@ static int lethe_exec(char *(*get_ucmd)(void), int (*null_command)(void),
     if (cmd != cmd_end) {
         has_error = cmd->task();
     } else if (did_you_mean(ucmd, 2) == 0) {
-        fprintf(stderr, "ERROR: '%s' is a unknown command. Maybe 'man' command would be more suitable for you, would not?\n",
-                        ucmd);
+        fprintf(stderr, "ERROR: Maybe 'man' command would be more suitable for you, would not?\n", ucmd);
     }
 
 lethe_exec_epilogue:

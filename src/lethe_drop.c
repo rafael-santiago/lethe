@@ -326,7 +326,13 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
         while (c != 'y' && c != 'n') {
             fprintf(stdout, "Do you really want to completely remove '%s' [y/n]: ", filepath);
             c = tolower(getchar());
+            if (c != 'y' && c != 'n') {
+                fflush(stdout);
+                getchar();
+            }
         }
+
+        getchar();
 
         if (c == 'n') {
             fprintf(stdout, "File '%s' was not removed.\n", filepath);

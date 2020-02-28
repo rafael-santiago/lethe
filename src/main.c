@@ -169,8 +169,11 @@ static int do_drop(void) {
         goto do_drop_epilogue;
     }
 
-    dtype = kLetheDataOblivion | kLetheFileRemove | kLetheCustomRandomizer |
-            ((~lethe_get_bool_option("ask-me-nothing", 0)) & kLetheUserPrompt);
+    dtype = kLetheDataOblivion | kLetheFileRemove | kLetheCustomRandomizer;
+
+    if (!lethe_get_bool_option("ask-me-nothing", 0)) {
+        dtype |= kLetheUserPrompt;
+    }
 
     if ((arg = lethe_get_option("dym-randomizer", NULL)) != NULL) {
         if ((func = strstr(arg, ":")) == NULL) {
@@ -214,7 +217,6 @@ static int do_drop(void) {
         if (strstr(arg, "--") == arg) {
             continue;
         }
-
         if (has_error != 0) { // INFO(Rafael): At least one well-succeed drop is considered a succeed dropping process.
             has_error = lethe_drop(arg, dtype, randomizer);
         } else {

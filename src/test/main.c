@@ -830,7 +830,7 @@ static int lethe(const char *command, const char *user_choices) {
     do {
         strcat(indirections, "..\\");
         snprintf(execline, sizeof(execline) - 1, "%sbin\\lethe.exe", indirections);
-    } while (stat(execline, &st) != 0) {
+    } while (stat(execline, &st) != 0);
 #else
 # error Some code wanted.
 #endif

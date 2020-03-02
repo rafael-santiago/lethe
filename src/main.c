@@ -152,9 +152,9 @@ static int do_drop(void) {
     unsigned char (*randomizer)(void) = lethe_default_randomizer;
     char libpath[4096], *func;
 #if defined(__unix__)
-    void *libdymrandom = NULL;
+    void *libdynrandom = NULL;
 #elif defined(_WIN32)
-    HMODULE libdymrandom = NULL;
+    HMODULE libdynrandom = NULL;
 #else
 # error Some code wanted.
 #endif
@@ -175,9 +175,9 @@ static int do_drop(void) {
         dtype |= kLetheUserPrompt;
     }
 
-    if ((arg = lethe_get_option("dym-randomizer", NULL)) != NULL) {
+    if ((arg = lethe_get_option("dyn-randomizer", NULL)) != NULL) {
         if ((func = strstr(arg, ":")) == NULL) {
-            fprintf(stderr, "ERROR: Randomizer's function name not informed in --dym-randomizer option.\n");
+            fprintf(stderr, "ERROR: Randomizer's function name not informed in --dyn-randomizer option.\n");
             goto do_drop_epilogue;
         }
 
@@ -186,22 +186,22 @@ static int do_drop(void) {
         func += 1;
 
 #if defined(__unix__)
-        if ((libdymrandom = dlopen(libpath, RTLD_LOCAL)) == NULL) {
+        if ((libdynrandom = dlopen(libpath, RTLD_LOCAL)) == NULL) {
             fprintf(stderr, "ERROR: Unable to open '%s'.\n", libpath);
             goto do_drop_epilogue;
         }
 
-        if ((randomizer = (unsigned char (*)(void)) dlsym(libdymrandom, func)) == NULL) {
+        if ((randomizer = (unsigned char (*)(void)) dlsym(libdynrandom, func)) == NULL) {
             fprintf(stderr, "ERROR: Randomizer function '%s' not found.\n", func);
             goto do_drop_epilogue;
         }
 #elif defined(_WIN32)
-        if ((libdymrandom = LoadLibrary(libpath)) == NULL) {
+        if ((libdynrandom = LoadLibrary(libpath)) == NULL) {
             fprintf(stderr, "ERROR: Unable to open '%s'.\n", libpath);
             goto do_drop_epilogue;
         }
 
-        if ((randomizer = (unsigned char (*)(void)) GetProcAddress(libdymrandom, func)) == NULL) {
+        if ((randomizer = (unsigned char (*)(void)) GetProcAddress(libdynrandom, func)) == NULL) {
             fprintf(stderr, "ERROR: Randomizer function '%s' not found.\n", func);
             goto do_drop_epilogue;
         }
@@ -227,12 +227,12 @@ static int do_drop(void) {
 do_drop_epilogue:
 
 #if defined(__unix__)
-    if (libdymrandom != NULL) {
-        dlclose(libdymrandom);
+    if (libdynrandom != NULL) {
+        dlclose(libdynrandom);
     }
 #elif defined(_WIN32)
-    if (libdymrandom != NULL) {
-        FreeLibrary(libdymrandom);
+    if (libdynrandom != NULL) {
+        FreeLibrary(libdynrandom);
     }
 #else
 # error Some code wanted.
@@ -251,7 +251,7 @@ static int do_drop_help(void) {
                     "           [--ask-me-nothing            |\n"
                     "            --overwrite-passes=<number> |\n"
                     "            --rename-passes=<number>    |\n"
-                    "            --dym-randomizer=<so-filepath>:<func-name>]\n");
+                    "            --dyn-randomizer=<so-filepath>:<func-name>]\n");
     return 0;
 }
 

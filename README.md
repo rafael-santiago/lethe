@@ -149,14 +149,14 @@ removes any found directory. I meant that it will be emptied by using an implici
 tool.
 
 The renaming and overwriting stuff uses random data. By default those data is provided by the internal ``Lethe's randomizer``. If you prefer
-providing your own randomizer you need to use the option ``--dym-randomizer=<lib-path>:<function-name>``.
+providing your own randomizer you need to use the option ``--dyn-randomizer=<lib-path>:<function-name>``.
 
 Supposing you have a dynamic local library called ``my-awesome-csprng.so``. This library has the function ``mac`` well-exported
 and it is "your awesome csprng":
 
 ```
     you@Hades:~/tmp# lethe drop [AB]-REPORTS-*-1995.DAT \
-    > --dym-randomizer=my-awesome-csprng.so:mac --ask-me-nothing
+    > --dyn-randomizer=my-awesome-csprng.so:mac --ask-me-nothing
     you@Hades:~/tmp# _
 ```
 

@@ -124,7 +124,89 @@ CUTE_TEST_CASE(lethe_tool_poke_tests)
 
     CUTE_ASSERT(lethe("drop lethe-*-poking --ask-me-nothing", NULL) == 0);
 
-    // TODO(Rafael): Test '--dym-randomizer=so:func'.
+    CUTE_ASSERT(stat("lethe-tool-poking", &st) != 0);
+
+    // INFO(Rafael): Now the last test steps will repeated by using a dynamic randomizer.
+
+#if defined(__unix__)
+    CUTE_ASSERT(mkdir("lethe-tool-poking", 0666) == 0);
+    CUTE_ASSERT(mkdir("lethe-tool-poking/villains", 0666) == 0);
+#elif defined(_WIN32)
+    CUTE_ASSERT(mkdir("lethe-tool-poking") == 0);
+    CUTE_ASSERT(mkdir("lethe-tool-poking\\villains") == 0);
+#else
+# error Some code wanted.
+#endif
+
+    CUTE_ASSERT(chdir("lethe-tool-poking") == 0);
+
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.txt", "It does not matter now", 22) == 0);
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.png", "It does not matter now", 22) == 0);
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.gif", "It does not matter now", 22) == 0);
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.jpg", "It does not matter now", 22) == 0);
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.dat", "It does not matter now", 22) == 0);
+
+    CUTE_ASSERT(write_data_to_file("Domesticated-Animals.txt", "Today is the day...", 19) == 0);
+
+    CUTE_ASSERT(write_data_to_file("villains/Fortress.txt", "Your head is like a fortress", 28) == 0);
+
+#if defined(__unix__)
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.txt --dyn-randomizer=../dynrand/lib/dynrand1.so:norand", "Y") != 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.txt --dyn-randomizer=../dynrand/lib/dynrand.so:norandom", "Y") != 0);
+#elif defined(_WIN32)
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.txt --dyn-randomizer=../dynrand/lib/dynrand1.dll:norand", "Y") != 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.txt --dyn-randomizer=../dynrand/lib/dynrand.dll:norandom", "Y") != 0);
+#else
+# error Some code wanted.
+#endif
+
+#if defined(__unix__)
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.txt --dyn-randomizer=../dynrand/lib/dynrand.so:norand", "Y") == 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.png --dyn-randomizer=../dynrand/lib/dynrand.so:norand", "n") == 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.gif --dyn-randomizer=../dynrand/lib/dynrand.so:norand", "y") == 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.jpg --dyn-randomizer=../dynrand/lib/dynrand.so:norand", "N") == 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.dat --dyn-randomizer=../dynrand/lib/dynrand.so:norand", "y") == 0);
+#elif defined(_WIN32)
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.txt --dyn-randomizer=..\\dynrand\\lib\\dynrand.dll:norand", "Y") == 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.png --dyn-randomizer=..\\dynrand\\lib\\dynrand.dll:norand", "n") == 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.gif --dyn-randomizer=..\\dynrand\\lib\\dynrand.dll:norand", "y") == 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.jpg --dyn-randomizer=..\\dynrand\\lib\\dynrand.dll:norand", "N") == 0);
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.dat --dyn-randomizer=..\\dynrand\\lib\\dynrand.dll:norand", "y") == 0);
+#else
+# error Some code wanted.
+#endif
+
+    CUTE_ASSERT(stat("The-Way-You-Used-To-Do.txt", &st) != 0);
+    CUTE_ASSERT(stat("The-Way-You-Used-To-Do.png", &st) == 0);
+    CUTE_ASSERT(stat("The-Way-You-Used-To-Do.gif", &st) != 0);
+    CUTE_ASSERT(stat("The-Way-You-Used-To-Do.jpg", &st) == 0);
+    CUTE_ASSERT(stat("The-Way-You-Used-To-Do.dat", &st) != 0);
+
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.txt", "It does not matter now", 22) == 0);
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.gif", "It does not matter now", 22) == 0);
+    CUTE_ASSERT(write_data_to_file("The-Way-You-Used-To-Do.dat", "It does not matter now", 22) == 0);
+
+#if defined(__unix__)
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.* Domesticated-Animals.txt villains/* --ask-me-nothing"
+                      " --dyn-randomizer=../dynrand/lib/dynrand.so:norand", NULL) == 0);
+#elif defined(_WIN32)
+    CUTE_ASSERT(lethe("drop The-Way-You-Used-To-Do.* Domesticated-Animals.txt villains/* --ask-me-nothing"
+                      " --dyn-randomizer=..\\dynrand\\lib\\dynrand.dll:norand", NULL) == 0);
+#else
+# error Some code wanted.
+#endif
+
+    chdir("..");
+
+#if defined(__unix__)
+    CUTE_ASSERT(lethe("drop lethe-*-poking --ask-me-nothing --dyn-randomizer=dynrand/lib/dynrand.so:norand", NULL) == 0);
+#elif defined(_WIN32)
+    CUTE_ASSERT(lethe("drop lethe-*-poking --ask-me-nothing --dyn-randomizer=dynrand/lib/dynrand.dll:norand", NULL) == 0);
+#else
+# error Some code wanted.
+#endif
+
+    CUTE_ASSERT(stat("lethe-tool-poking", &st) != 0);
 CUTE_TEST_CASE_END
 
 CUTE_TEST_CASE(lethe_drop_tests)

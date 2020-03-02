@@ -186,7 +186,7 @@ static int do_drop(void) {
         func += 1;
 
 #if defined(__unix__)
-        if ((libdynrandom = dlopen(libpath, RTLD_LOCAL)) == NULL) {
+        if ((libdynrandom = dlopen(libpath, RTLD_LAZY)) == NULL) {
             fprintf(stderr, "ERROR: Unable to open '%s'.\n", libpath);
             goto do_drop_epilogue;
         }

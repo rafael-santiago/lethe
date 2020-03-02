@@ -46,8 +46,8 @@ Finally, I am not reponsible for any misuse of information or code here. I am no
 data destruction or loss (partial or total) done by this software, too. Who knows your babysitter! Use it at your own
 risk!
 
-How to use Lethe as a command line tool?
-----------------------------------------
+How can I use Lethe as a command line tool?
+-------------------------------------------
 
 Lethe is a well-simple tool. It works based on commands and command options. The general idea when using lethe from your
 command line is:

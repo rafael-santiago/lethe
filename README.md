@@ -98,7 +98,28 @@ Now, supposing you want the tool:
 
 If the build succeeds the binary will be at ``../bin/lethe``.
 
-## How to use Lethe as a command line tool?
+## Is there some way of installing the tool on my system?
+
+Yes, there is.
+
+After running the tool's build, all you should do is:
+
+```
+    you@Hades:~/src/lethe/src# hefesto --install
+    you@Hades:~/src/lethe/src# _
+```
+
+If you want to uninstall it:
+
+```
+    you@Hades:~/src/lethe/src# hefesto --uninstall
+    you@Hades:~/src/lethe/src# _
+```
+
+On Windows the install script will try to export the lethe's binary path. With it you will be able to call ``lethe``
+from anywhere within your system. However, you should run the install command with administrator privilegies.
+
+## How can I use Lethe as a command line tool?
 
 Lethe is a well-simple tool. It works based on commands and command options. The general idea when using lethe from your
 command line is: ``lethe <command> [options]``.

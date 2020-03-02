@@ -376,19 +376,27 @@ static int did_you_mean(const char *ucmd, const int max_distance) {
 }
 
 static int has_tool(const char *cmd) {
-    FILE *p = popen(cmd, "r");
-    int has = 0;
-    if (p != NULL) {
-        has = 1;
-        pclose(p);
-    }
-    return has;
+    char cmdline[4096];
+#if defined(__unix__)
+    snprintf(cmdline, sizeof(cmdline) - 1, "%s > /dev/null", cmd);
+#elif defined(_WIN32)
+    snprintf(cmdline, sizeof(cmdline) - 1, "%s", cmd);
+#else
+# error Some code wanted.
+#endif
+    return system(cmd);
 }
 
 static int has_more(void) {
-    return has_tool("more --version");
+#if defined(__unix__)
+    return (has_tool("more -V") == 0);
+#elif defined(_WIN32)
+    return (has_tool("more /h ") == 0);
+#else
+# error Some code wanted.
+#endif
 }
 
 static int has_less(void) {
-    return has_tool("less --version");
+    return (has_tool("less --version") == 0);
 }

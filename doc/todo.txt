@@ -1,5 +1,5 @@
-(A) Export 'C:\lethe\bin' path on Windows. +Installer,+Build
 (B) Detect path to device for tests against Foremost. +Tests
+x (A) Export 'C:\lethe\bin' path on Windows. +Installer,+Build
 x (A) Test --dyn-randomizer. +Tests
 x (A) Implement tool system tests. +Tests
 x (B) Test build on Solaris. Adjust anything if necessary. +Build

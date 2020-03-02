@@ -154,11 +154,8 @@ local function export_lethe_binary() : result type int {
     $path = hefesto.sys.env("WINREG:HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\\PATH");
 
     if ($path.len() > 0) {
-        if ($path.match("C:\\\\lethe\\\\bin\\\\lethe\\.exe") == 0) {
-            if ($path.at($path.len() - 1) != ";") {
-                $path = $path + ";";
-            }
-            $path = $path + "C:\\lethe\\bin\\lethe.exe;";
+        if ($path.match(" ;C:\\\\lethe\\\\bin;") == 0) {
+            $path = $path + " ;C:\\lethe\\bin;";
             $has_error = hefesto.sys.setenv("WINREG:HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\\" +
                                             "PATH", $path);
         } else {
@@ -178,11 +175,10 @@ local function unexport_lethe_binary() : result type int {
     var path type string;
     $path = hefesto.sys.env("WINREG:HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\\PATH");
 
-    if ($path.match("C:\\\\lethe\\\\bin\\lethe\\.exe;") == 0) {
-        $path.replace("C:\\\\lethe\\\\bin\\lethe\\.exe;", "");
-        #$has_error = hefesto.sys.setenv("WINREG:HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\\PATH",
-        #                                $path);
-        hefesto.sys.echo("NEW PATH = " + $path + "\n");
+    if ($path.match(" ;C:\\\\lethe\\\\bin;") == 1) {
+        $path.replace(" ;C:\\\\lethe\\\\bin;", "");
+        $has_error = hefesto.sys.setenv("WINREG:HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\\PATH",
+                                        $path);
     }
 
     result $has_error;

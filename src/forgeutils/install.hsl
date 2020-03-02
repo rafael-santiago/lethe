@@ -70,6 +70,11 @@ local function do_install() : result type int {
     }
 
     if ($has_error == 0) {
+        if (hefesto.sys.os_name() == "windows") {
+            if (export_lethe_binary() != 0) {
+                hefesto.sys.echo("WARN: Unable to export lethe's binary path. Do it yourself.\n");
+            }
+        }
         hefesto.sys.echo("INFO: Installed.\n");
     } else {
         hefesto.sys.echo("ERROR: Not installed.\n");
@@ -118,6 +123,13 @@ local function do_uninstall() : result type int {
         $b = $b + 1;
     }
 
+    if (hefesto.sys.os_name() == "windows") {
+        if (unexport_lethe_binary() != 0) {
+            hefesto.sys.echo("WARN: Unable to remove lethe's binary path from your PATH environment variable. " +
+                             "Do it yourself.\n");
+        }
+    }
+
     var has_error type int;
 
     if ($error_nr == $burn_list.count()) {
@@ -132,4 +144,46 @@ local function do_uninstall() : result type int {
     }
 
     result 0;
+}
+
+local function export_lethe_binary() : result type int {
+    var has_error type int;
+    $has_error = 1;
+
+    var path type string;
+    $path = hefesto.sys.env("WINREG:HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\\PATH");
+
+    if ($path.len() > 0) {
+        if ($path.match("C:\\\\lethe\\\\bin\\\\lethe\\.exe") == 0) {
+            if ($path.at($path.len() - 1) != ";") {
+                $path = $path + ";";
+            }
+            $path = $path + "C:\\lethe\\bin\\lethe.exe;";
+            $has_error = hefesto.sys.setenv("WINREG:HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\\" +
+                                            "PATH", $path);
+        } else {
+            $has_error = 0;
+        }
+    } else {
+        hefesto.sys.echo("ERROR: Your environment PATH variable seems to be NULL.\n");
+    }
+
+    result $has_error;
+}
+
+local function unexport_lethe_binary() : result type int {
+    var has_error type int;
+    $has_error = 0;
+
+    var path type string;
+    $path = hefesto.sys.env("WINREG:HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\\PATH");
+
+    if ($path.match("C:\\\\lethe\\\\bin\\lethe\\.exe;") == 0) {
+        $path.replace("C:\\\\lethe\\\\bin\\lethe\\.exe;", "");
+        #$has_error = hefesto.sys.setenv("WINREG:HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment\\PATH",
+        #                                $path);
+        hefesto.sys.echo("NEW PATH = " + $path + "\n");
+    }
+
+    result $has_error;
 }

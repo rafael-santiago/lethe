@@ -117,7 +117,7 @@ If you want to uninstall it:
 ```
 
 On Windows the install script will try to export the lethe's binary path. With it you will be able to call ``lethe``
-from anywhere within your system. However, you should run the install command with administrator privilegies.
+from anywhere within your system. However, you should run the install command with administrator privileges.
 
 ## How can I use Lethe as a command line tool?
 

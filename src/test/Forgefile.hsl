@@ -25,6 +25,9 @@ lethe-tests.preloading() {
 }
 
 lethe-tests.prologue() {
+    if (hefesto.sys.os_name() != "windows") {
+        set_devpath();
+    }
     if (build_libcutest() != 0) {
         hefesto.project.abort(1);
     }
@@ -150,5 +153,46 @@ local function build_dynrand() : result type none {
     } else {
         hefesto.sys.echo("BUILD ERROR: Project 'dynrand' not found.\n");
         hefesto.project.abort(1);
+    }
+}
+
+local function set_devpath() : result type none {
+    var lines type list;
+    $lines = hefesto.sys.lines_from_file("../DEV_PATH", ".*");
+    if ($lines.count() == 0) {
+        $lines = hefesto.sys.lines_from_file("/etc/fstab", "^/.*[\\t ]/[\\t ].*");
+        var devpath type string;
+        if ($lines.count() != 1) {
+            $devpath = hefesto.sys.prompt("It was not possible to guess the device path of your '/'. Please provide this path: ");
+            if ($devpath.len() == 0) {
+                hefesto.sys.echo("ERROR: Unable to set your devpath. Aborting.\n");
+                hefesto.project.abort(1);
+            }
+            var devpath_confirm type string;
+            $devpath_confirm = hefesto.sys.prompt("Confirm this path by inputing it again: ");
+            if ($devpath != $devpath_confirm) {
+                hefesto.sys.echo("ERROR: The paths do not match.\n");
+                hefesto.project.abort(1);
+            }
+            $devpath = $devpath + "\n";
+        } else {
+            $devpath = $lines.item(0);
+            $devpath.replace("[\\t ].*/.*$", "\n");
+        }
+        var fp type file;
+        $fp = hefesto.sys.fopen("../DEV_PATH", "w");
+        if ($fp == 0) {
+            hefesto.sys.echo("ERROR: Unable to save device path to ../DEV_PATH config file.\n");
+            hefesto.project.abort(1);
+        }
+        hefesto.sys.fwrite($devpath, $devpath.len(), $fp);
+        hefesto.sys.fclose($fp);
+        $devpath.replace("\\n", "");
+        hefesto.sys.echo("======================================================================================================================\n");
+        hefesto.sys.echo("INFO: The lethe_drop() tests will use '" + $devpath + "' if lethe's source code tree is not stored into this\n" +
+                         "      device you need to change the content of '../DEV_PATH' to the correct device path where this repository is\n" +
+                         "      actually stored. Otherwise some tests will break and it will be impossible to test if Lethe is really working on\n" +
+                         "      your system.\n");
+        hefesto.sys.echo("======================================================================================================================\n\n");
     }
 }

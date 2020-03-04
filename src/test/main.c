@@ -32,7 +32,7 @@ static int has_foremost(void);
 
 static int has_grep(void);
 
-#if defined(__linux__)
+#if defined(__unix__)
 static int has_found_by_foremost(const char *signature, const size_t signature_size, const char *output_dir);
 
 static int write_foremost_config(const char *header, const size_t header_size, const char *footer, const size_t footer_size, const char *conf);
@@ -40,6 +40,8 @@ static int write_foremost_config(const char *header, const size_t header_size, c
 
 #if defined(__unix__)
 static int has_found_by_grep(const char *devpath, const char *signature);
+
+static char *get_devpath(void);
 #endif
 
 static char *get_random_printable_buffer(const size_t bytes_total);
@@ -287,7 +289,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
         // INFO(Rafael): Now we will test it against foremost if possible.
 
         if (has_foremost()) {
-#if defined(__linux__)
+#if defined(__unix__)
             system("rm -rf recovery");
             fprintf(stdout, "INFO: Nice, you have Foremost installed. Let's check if it can caught files removed by Lethe.\n"
                             "      Firstly, we will generate some control data and try to find it with Foremost.\n");
@@ -305,7 +307,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
             fprintf(stdout, "      Control data was removed. Now trying to recover it with Foremost... Hold on...\n");
 
             // INFO(Rafael): This is the control data. Foremost must be able to recover this piece of information.
-            snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i /dev/sda1 -c foremost.conf -o recovery");
+            snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i %s -c foremost.conf -o recovery", get_devpath());
             CUTE_ASSERT(system(cmdline) == 0);
 
             CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 1);
@@ -335,7 +337,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
                             "      Hold on...\n");
 
             // INFO(Rafael): This is the test data. Foremost must not be able to recover this piece of information.
-            snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i /dev/sda1 -c foremost.conf -o recovery");
+            snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i %s -c foremost.conf -o recovery", get_devpath());
             CUTE_ASSERT(system(cmdline) == 0);
 
             CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 0);
@@ -367,7 +369,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
 
             fprintf(stdout, "      Done. Now trying to recover it with Foremost... Hold on...\n");
 
-            snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i /dev/sda1 -c foremost.conf -o recovery");
+            snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i %s -c foremost.conf -o recovery", get_devpath());
             CUTE_ASSERT(system(cmdline) == 0);
 
             CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 0);
@@ -397,7 +399,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
                 fprintf(stdout, "      Control data was removed. Now trying to recover it with grep and stuff... Hold on...\n");
 
 
-                CUTE_ASSERT(has_found_by_grep("/dev/ada0s1a", buf) == 1);
+                CUTE_ASSERT(has_found_by_grep(get_devpath(), buf) == 1);
 
                 fprintf(stdout, "INFO: Nice, control data was actually found by grep.\n");
 
@@ -418,7 +420,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
                 fprintf(stdout, "      Test data was removed by using Lethe. Now trying to recover it with grep and stuff...\n"
                                 "      Hold on...\n");
 
-                CUTE_ASSERT(has_found_by_grep("/dev/ada0s1a", buf) == 0);
+                CUTE_ASSERT(has_found_by_grep(get_devpath(), buf) == 0);
 
                 fprintf(stdout, "INFO: Everything looks fine on your system!\n"
                                 "      It could not recover data removed by Lethe ;)\n");
@@ -442,23 +444,23 @@ CUTE_TEST_CASE(lethe_drop_tests)
 
                 fprintf(stdout, "      Done. Now trying to recover it with grep and stuff... Hold on...\n");
 
-                CUTE_ASSERT(has_found_by_grep("/dev/ada0s1a", buf) == 0);
+                CUTE_ASSERT(has_found_by_grep(get_devpath(), buf) == 0);
 
                 fprintf(stdout, "INFO: Nice! Grep and stuff could not recover data forgotten with Lethe ;)\n");
 
                 CUTE_ASSERT(remove("data.txt") == 0);
                 free(buf);
             } else {
-#if defined(__linux__)
+#if defined(__unix__)
                 fprintf(stdout, "WARN: Unfortunately, this test cannot really ensure if the implemented data wiping is\n"
                                 "      actually working on your system. For doing it you need to install 'Foremost' data\n"
                                 "      recovery tool.\n");
 #else
                 fprintf(stdout, "WARN: Unfortunately, this test cannot really ensure if the implemented data wiping is\n"
                                 "      actually working on your system. Until now, Lethe needs Foremost for doing it, thus\n"
-                                "      it is only available on Linux.\n");
-            }
+                                "      it is only available on Unix-like environments.\n");
 #endif
+            }
         }
     } else {
         fprintf(stdout, "WARN: Some test steps were skipped here.\n");
@@ -697,15 +699,14 @@ CUTE_TEST_CASE(lethe_strglob_tests)
 CUTE_TEST_CASE_END
 
 static int has_foremost(void) {
-#if defined(__linux__)
+#if defined(__unix__)
     return (system("foremost -V > /dev/null") == 0);
 #else
     return 0;
 #endif
 }
 
-#if defined(__linux__)
-
+#if defined(__unix__)
 static int has_found_by_foremost(const char *signature, const size_t signature_size, const char *output_dir) {
     DIR *dir = opendir(output_dir);
     int has_found = 0;
@@ -813,7 +814,6 @@ static int write_foremost_config(const char *header, const size_t header_size, c
 
     return 0;
 }
-
 #endif
 
 static int stat_wrapper(const char *pathname, struct stat *buf) {
@@ -929,12 +929,41 @@ static int has_found_by_grep(const char *devpath, const char *signature) {
 
 static int has_grep(void) {
 #if defined(__unix__)
-    return (system("cat /dev/null")     == 0 &&
-            system("strings --version") == 0 &&
-            system("grep --version")    == 0);
+    return (system("cat /dev/null > /dev/null")     == 0 &&
+            system("strings --version > /dev/null") == 0 &&
+            system("grep --version > /dev/null")    == 0);
 #elif defined(_WIN32)
     return 0;
 #else
 # error Some code wanted.
 #endif
 }
+
+#if defined(__unix__)
+static char *get_devpath(void) {
+    static char devpath[4096] = "", *d;
+    char indirections[4096] = "";
+    struct stat st;
+    FILE *fp;
+    size_t devpath_size;
+
+    do {
+        strcat(indirections, "../");
+        snprintf(devpath, sizeof(devpath) - 1, "%sDEV_PATH", indirections);
+    } while (stat(devpath, &st) != 0);
+    if ((fp = fopen(devpath, "rb")) != NULL) {
+        fseek(fp, 0L, SEEK_END);
+        devpath_size = (size_t) ftell(fp);
+        fseek(fp, 0L, SEEK_SET);
+        memset(devpath, 0, sizeof(devpath));
+        fread(devpath, 1, devpath_size, fp);
+        if ((d = strstr(devpath, "\n")) != NULL) {
+            *d = 0;
+        }
+        fclose(fp);
+    } else {
+        memset(devpath, 0, sizeof(devpath));
+    }
+    return &devpath[0];
+}
+#endif

@@ -57,9 +57,13 @@ not work with your smartphone. Do not use this tool for doing this! Maybe in fut
 support for flash stuff too, but by now, I won't do it.
 
 For ensuring that the implemented data destruction here is working fine on your system the well-known forensic tool
-``Foremost`` is used (if you are on ``Linux``, in this case and have it installed). Moreover, I strongly suggest you to
-build the software on your machine by running all tests before installing the tool or using it as a library into your
-own stuff. Be sure that it is actually working instead of just believing on it.
+``Foremost`` is used (if you are on ``Linux``, in this case and have it installed). There are ports of ``Foremost`` for
+other Unix-like than ``Linux``, if you have a port of it installed, it will be used. If you do not have ``Foremost`` installed
+and still are on some Unix-like, the test binary will try to perform a Macgyver with ``cat + strings + grep`` for all necessary
+recoverying stuff.
+
+I strongly suggest you to build the software on your machine by running all tests before installing the tool or using it as a library
+into your own stuff. Be sure that it is actually working instead of just believing on it.
 
 Finally, I am not reponsible for any misuse of information or code here. I am not responsible for any possible damage, data
 destruction or loss (partial or total) done by this software, too. Who knows your babysitter! Use it at your own risk!
@@ -107,6 +111,10 @@ stored.
 Your device will not be written. It will only scanned trying to find test data during ``lethe_drop`` tests. Since your device
 is read on-line (it will not be umounted for sure) try to minimize disk activity on your system when building ``Lethe``. Otherwise
 your disk activities can screw up all tests.
+
+Depeding on the size of your storage device the tests can take some time, go walk your dog (good luck if you have a cat instead), stroll out
+there, etc. Come back later! If you are in a rush add to the build command the option ``--quick-tests``. Anyway, I strongly suggest you to
+test if the data wiping is actually working on your environment before installing and using ``Lethe``.
 
 ## Is there some way of installing the tool on my system?
 

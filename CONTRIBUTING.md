@@ -13,7 +13,7 @@ Firstly, thank you for contributing. You should consider the following before su
 - Details are awesome in a pull request;
 - The first idea is providing a new feature thinking in all supported platforms;
 - Speed is secondary;
-- Some observed points in K.I.S.S. and [Suckless](https://suckless.org> are awesome);
+- Some observed points in K.I.S.S. and [Suckless](https://suckless.org) are awesome;
 
 The best way of knowing what could be done is reading [doc/todo.txt](https://github.com/rafael-santiago/lethe/blob/master/doc/todo.txt).
 

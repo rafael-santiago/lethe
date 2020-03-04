@@ -389,8 +389,8 @@ CUTE_TEST_CASE(lethe_drop_tests)
 #endif
         } else {
             if (has_grep()) {
-                fprintf(stdout, "INFO: Nice, you have cat, strings and grep installed. Let's check if it can caught files removed by Lethe.\n"
-                                "      Firstly, we will generate some control data and try to find it with those set of tools.\n");
+                fprintf(stdout, "INFO: Nice, you have cat, strings and grep installed. Let's check if them can caught files removed by Lethe.\n"
+                                "      Firstly, we will generate some control data and try to find it with these set of tools.\n");
 
                 buf_size = 20;
 

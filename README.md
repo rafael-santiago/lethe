@@ -98,6 +98,16 @@ Now, supposing you want the tool:
 
 If the build succeeds the binary will be at ``../bin/lethe``.
 
+On Unix-likes when running the build at the first time it will try to detect the device path where your ``/`` is stored.
+This device path will be saved to `src/DEV_PATH``. This device path is very important to ensure that data wiping done
+by ``Lethe`` is really working on your system. If you have cloned this repository to a place where it will not be stored into the
+detected device path, you need to change the content of ``src/DEV_PATH`` to the correct device path where your repository copy is
+stored.
+
+Your device will not be written. It will only scanned trying to find test data during ``lethe_drop`` tests. Since your device
+is read on-line (it will not be umounted for sure) try to minimize disk activity on your system when building ``Lethe``. Otherwise
+your disk activities can screw up all tests.
+
 ## Is there some way of installing the tool on my system?
 
 Yes, there is.

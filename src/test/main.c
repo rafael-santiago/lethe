@@ -389,6 +389,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
 #endif
         } else {
             if (has_grep()) {
+#if defined(__unix__)
                 fprintf(stdout, "INFO: Nice, you have cat, strings and grep installed. Let's check if them can caught files removed by Lethe.\n"
                                 "      Firstly, we will generate some control data and try to find it with these set of tools.\n");
 
@@ -455,6 +456,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
 
                 CUTE_ASSERT(remove("data.txt") == 0);
                 free(buf);
+#endif
             } else {
 #if defined(__unix__)
                 fprintf(stdout, "WARN: Unfortunately, this test cannot really ensure if the implemented data wiping is\n"

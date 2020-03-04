@@ -30,10 +30,16 @@ static unsigned char randomizer_wrapper(void);
 
 static int has_foremost(void);
 
+static int has_grep(void);
+
 #if defined(__linux__)
 static int has_found_by_foremost(const char *signature, const size_t signature_size, const char *output_dir);
 
 static int write_foremost_config(const char *header, const size_t header_size, const char *footer, const size_t footer_size, const char *conf);
+#endif
+
+#if defined(__unix__)
+static int has_found_by_grep(const char *devpath, const char *signature);
 #endif
 
 static char *get_random_printable_buffer(const size_t bytes_total);
@@ -375,14 +381,83 @@ CUTE_TEST_CASE(lethe_drop_tests)
             free(buf);
 #endif
         } else {
+            if (has_grep()) {
+                fprintf(stdout, "INFO: Nice, you have cat, strings and grep installed. Let's check if it can caught files removed by Lethe.\n"
+                                "      Firstly, we will generate some control data and try to find it with those set of tools.\n");
+
+                buf_size = 20;
+
+                buf = get_random_printable_buffer(buf_size);
+                CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
+                sleep(5);
+                CUTE_ASSERT(system("sync data.txt") == 0);
+                sleep(5);
+
+                CUTE_ASSERT(system("rm -f data.txt") == 0);
+                fprintf(stdout, "      Control data was removed. Now trying to recover it with grep and stuff... Hold on...\n");
+
+
+                CUTE_ASSERT(has_found_by_grep("/dev/ada0s1a", buf) == 1);
+
+                fprintf(stdout, "INFO: Nice, control data was actually found by grep.\n");
+
+                free(buf);
+
+                fprintf(stdout, "      Now we will generate a random piece of data, remove it by using Lethe and try to recover\n"
+                                "      it with grep and stuff. Wait...\n");
+
+                buf_size = 20;
+                buf = get_random_printable_buffer(buf_size);
+                CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
+                sleep(5);
+                CUTE_ASSERT(system("sync data.txt") == 0);
+                sleep(5);
+
+                CUTE_ASSERT(lethe_drop("data.txt", kLetheDataOblivion | kLetheFileRemove) == 0);
+
+                fprintf(stdout, "      Test data was removed by using Lethe. Now trying to recover it with grep and stuff...\n"
+                                "      Hold on...\n");
+
+                CUTE_ASSERT(has_found_by_grep("/dev/ada0s1a", buf) == 0);
+
+                fprintf(stdout, "INFO: Everything looks fine on your system!\n"
+                                "      It could not recover data removed by Lethe ;)\n");
+
+                free(buf);
+
+                fprintf(stdout, "\nINFO: Now let's only test data oblivion. File will stay but its content will be forgotten.\n");
+
+                buf_size = 20;
+                buf = get_random_printable_buffer(buf_size);
+                CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
+                sleep(5);
+                CUTE_ASSERT(system("fsync data.txt") == 0);
+                sleep(5);
+
+                fprintf(stdout, "      Test data created... Now let's forget this content by using Lethe... Wait...\n");
+
+                CUTE_ASSERT(lethe_drop("data.txt", kLetheDataOblivion) == 0);
+
+                CUTE_ASSERT(stat("data.txt", &st) == 0);
+
+                fprintf(stdout, "      Done. Now trying to recover it with grep and stuff... Hold on...\n");
+
+                CUTE_ASSERT(has_found_by_grep("/dev/ada0s1a", buf) == 0);
+
+                fprintf(stdout, "INFO: Nice! Grep and stuff could not recover data forgotten with Lethe ;)\n");
+
+                CUTE_ASSERT(remove("data.txt") == 0);
+                free(buf);
+            } else {
 #if defined(__linux__)
-            fprintf(stdout, "WARN: Unfortunately, this test cannot really ensure if the implemented data wiping is\n"
-                            "      actually working on your system. For doing it you need to install 'Foremost' data\n"
-                            "      recovery tool.\n");
+                fprintf(stdout, "WARN: Unfortunately, this test cannot really ensure if the implemented data wiping is\n"
+                                "      actually working on your system. For doing it you need to install 'Foremost' data\n"
+                                "      recovery tool.\n");
 #else
-            fprintf(stdout, "WARN: Unfortunately, this test cannot really ensure if the implemented data wiping is\n"
-                            "      actually working on your system. Until now, Lethe needs Foremost for doing it, thus\n"
-                            "      it is only available on Linux.\n");
+                fprintf(stdout, "WARN: Unfortunately, this test cannot really ensure if the implemented data wiping is\n"
+                                "      actually working on your system. Until now, Lethe needs Foremost for doing it, thus\n"
+                                "      it is only available on Linux.\n");
+            }
 #endif
         }
     } else {
@@ -842,4 +917,24 @@ static int lethe(const char *command, const char *user_choices) {
     remove(".lethe_usr_inputs");
 
     return exit_code;
+}
+
+#if defined(__unix__)
+static int has_found_by_grep(const char *devpath, const char *signature) {
+    char cmdline[4096];
+    snprintf(cmdline, sizeof(cmdline), "cat %s | strings | grep %s --max-count=1", devpath, signature);
+    return (system(cmdline) == 0);
+}
+#endif
+
+static int has_grep(void) {
+#if defined(__unix__)
+    return (system("cat /dev/null")     == 0 &&
+            system("strings --version") == 0 &&
+            system("grep --version")    == 0);
+#elif defined(_WIN32)
+    return 0;
+#else
+# error Some code wanted.
+#endif
 }

@@ -1,3 +1,4 @@
+(A) Find out a way of ensuring/testing lethe_drop() without Foremost. +Tests
 (B) Detect path to device for tests against Foremost. +Tests
 x (A) Add install instructions to 'README.md'. +Documentation
 x (A) Export 'C:\lethe\bin' path on Windows. +Installer,+Build

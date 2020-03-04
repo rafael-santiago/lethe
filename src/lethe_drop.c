@@ -360,9 +360,7 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
 # error Some code wanted.
 #endif
 
-#if defined(__FreeBSD__)
-        blkpad = 0; // TODO(Rafael): Test if blksize equals to block sector size will really broke data wiping in FreeBSD.
-#elif defined(__unix__)
+#if defined(__unix__)
         // INFO(Rafael): Avoid leaking the original size of the file. The file data will turn into pure gibberish,
         //               anyway, if we can avoid leaking this kind of information, let's do it.
         if ((blkpad = st.st_size % st.st_blksize) > 0) {

@@ -310,7 +310,11 @@ CUTE_TEST_CASE(lethe_drop_tests)
             snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i %s -c foremost.conf -o recovery", get_devpath());
             CUTE_ASSERT(system(cmdline) == 0);
 
-            CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 1);
+            // INFO(Rafael): Since the search is being done over an on-line device, depending on the disk activity
+            //               the entire file will not be actually recovered. Due to it, a half file recovery will be considered
+            //               a successfuly file recovering.
+
+            CUTE_ASSERT(has_found_by_foremost(buf, buf_size >> 1, "recovery") == 1);
 
             fprintf(stdout, "INFO: Nice, control data was actually found by Foremost.\n");
 
@@ -340,7 +344,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
             snprintf(cmdline, sizeof(cmdline) - 1, "foremost -i %s -c foremost.conf -o recovery", get_devpath());
             CUTE_ASSERT(system(cmdline) == 0);
 
-            CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 0);
+            CUTE_ASSERT(has_found_by_foremost(buf, buf_size >> 1, "recovery") == 0);
 
             fprintf(stdout, "INFO: Everything looks fine on your system!\n"
                             "      Foremost could not recover data removed by Lethe ;)\n");
@@ -373,6 +377,7 @@ CUTE_TEST_CASE(lethe_drop_tests)
             CUTE_ASSERT(system(cmdline) == 0);
 
             CUTE_ASSERT(has_found_by_foremost(buf, buf_size, "recovery") == 0);
+            CUTE_ASSERT(has_found_by_foremost(buf, buf_size >> 1, "recovery") == 0);
 
             fprintf(stdout, "INFO: Nice! Foremost could not recover data forgotten with Lethe ;)\n");
 

@@ -893,6 +893,7 @@ static int write_data_to_file(const char *filepath, const char *data, size_t dat
     if ((fp = fopen(filepath, "wb")) == NULL) {
         return 1;
     }
+    fprintf(fp, "\n");
     fwrite(data, 1, data_size, fp);
     fprintf(fp, "\n");
     fclose(fp);

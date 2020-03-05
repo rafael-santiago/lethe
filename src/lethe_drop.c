@@ -114,7 +114,7 @@ int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, ...) {
 # error Some code wanted.
 #endif
 
-    memset(fullpath, 0, sizeof(fullpath));
+    lethe_memset(fullpath, 0, sizeof(fullpath));
 
     if (has_ldir) {
         // INFO(Rafael): It seems to have some literal directory indication.
@@ -131,7 +131,7 @@ int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, ...) {
 #else
 # error Some code wanted.
 #endif
-        memcpy(fullpath, pattern, p - pattern);
+        lethe_memcpy(fullpath, pattern, p - pattern);
         if (g_lethe_stat(fullpath, &st) != 0 || !S_ISDIR(st.st_mode)) {
             p = pattern;
             snprintf(fullpath, sizeof(fullpath) - 1, "%s", cwd);
@@ -443,7 +443,7 @@ static int fdoblivion(int fd, const size_t fsize, lethe_randomizer get_byte) {
         goto fdoblivion_epilogue;
     }
 
-    memset(buf, 0xFF, fsize);
+    lethe_memset(buf, 0xFF, fsize);
 
     if (write(fd, buf, fsize) != fsize) {
         goto fdoblivion_epilogue;
@@ -455,7 +455,7 @@ static int fdoblivion(int fd, const size_t fsize, lethe_randomizer get_byte) {
         goto fdoblivion_epilogue;
     }
 
-    memset(buf, 0x00, fsize);
+    lethe_memset(buf, 0x00, fsize);
 
     if (write(fd, buf, fsize) != fsize) {
         goto fdoblivion_epilogue;
@@ -525,7 +525,7 @@ static int fdoblivion(HANDLE fd, const size_t fsize, lethe_randomizer get_byte) 
         goto fdoblivion_epilogue;
     }
 
-    memset(buf, 0xFF, fsize);
+    lethe_memset(buf, 0xFF, fsize);
 
     if (WriteFile(fd, buf, (DWORD)fsize, &written, NULL) == FALSE || written != fsize) {
         goto fdoblivion_epilogue;
@@ -537,7 +537,7 @@ static int fdoblivion(HANDLE fd, const size_t fsize, lethe_randomizer get_byte) 
         goto fdoblivion_epilogue;
     }
 
-    memset(buf, 0x00, fsize);
+    lethe_memset(buf, 0x00, fsize);
 
     if (WriteFile(fd, buf, (DWORD)fsize, &written, NULL) == FALSE || written != fsize) {
         goto fdoblivion_epilogue;
@@ -723,8 +723,8 @@ lethe_remove_epilogue:
         lethe_set_error_code(kLetheErrorFileRemoveHasFailed);
     }
 
-    memset(ping_pong_paths[0], 0, sizeof(ping_pong_paths[0]));
-    memset(ping_pong_paths[1], 0, sizeof(ping_pong_paths[0]));
+    lethe_memset(ping_pong_paths[0], 0, sizeof(ping_pong_paths[0]));
+    lethe_memset(ping_pong_paths[1], 0, sizeof(ping_pong_paths[0]));
 
     return has_error;
 }

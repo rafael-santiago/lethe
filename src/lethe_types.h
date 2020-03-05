@@ -8,6 +8,7 @@
 #ifndef LETHE_LETHE_TYPES_H
 #define LETHE_LETHE_TYPES_H 1
 
+#include <lethe_libc.h>
 #include <sys/stat.h>
 
 typedef unsigned char (*lethe_randomizer)(void);

@@ -250,6 +250,8 @@ Now, ``lethe_drop`` basically takes two arguments:
 - The filename or a glob pattern.
 - The drop type.
 
+If it returns zero all was done, otherwise some error has occurred during the process.
+
 Take a look:
 
 ```c
@@ -332,6 +334,8 @@ It is also possible to set some internal components of implemented data wiping s
 - Total o file renamings.
 - The used 'stat' function.
 
+When those functions succeeds it returns zero.
+
 Setting total of overwrites:
 
 ```c
@@ -355,5 +359,28 @@ Setting 'stat' function:
 ```c
     if (lethe_set_stat(ur_custom_stat) != 0) {
         fprintf(stderr, "ERROR: Stat function not set.\n");
+    }
+```
+
+Certain applications are more careful for avoiding situations where some explotation could be harmful for theirs users. For example, privacy
+could be compromised if some well-basic libc functions were hooked. In order to mitigate it ``Lethe`` offers the option of explicitly
+indicating the address of some libc functions. The functions currently available are: ``memcpy``, ``memset`` and ``memcmp``.
+
+For setting them you need to pass the pointer to your own implementation. If the set was done the function returns zero:
+
+```c
+    if (lethe_set_memcpy(builtin_memcpy) != 0) {
+        fprintf(stderr, "ERROR: Unable to set memcpy.\n");
+        exit(1);
+    }
+
+    if (lethe_set_memset(builtin_memset) != 0) {
+        fprintf(stderr, "ERROR: Unable to set memset.\n");
+        exit(1);
+    }
+
+    if (lethe_set_memcmp(builtion_memcmp) != 0) {
+        fprintf(stderr, "ERROR: Unable to set memcmp.\n");
+        exit(1);
     }
 ```

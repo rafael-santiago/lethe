@@ -21,7 +21,7 @@ void lethe_set_last_filepath(const char *filepath) {
     if (filepath != NULL) {
         snprintf(g_lethe_filepath, sizeof(g_lethe_filepath) - 1, "%s", filepath);
     } else {
-        memset(g_lethe_filepath, 0, sizeof(g_lethe_filepath));
+        lethe_memset(g_lethe_filepath, 0, sizeof(g_lethe_filepath));
     }
 }
 

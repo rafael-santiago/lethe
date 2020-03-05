@@ -76,7 +76,8 @@ When commenting some code use the following format:
 
     // TODO(your name, or as people know you): To do item.
 
-    // TIP(your name, or as people know you): You are giving the tips for people understand some craziness, weird code chunk.
+    // TIP(your name, or as people know you): You are giving the tips for people understand
+    //                                        some craziness, weird code chunk.
 ```
 
 Static functions even being static must be prototyped at the beginning of the implementation file.
@@ -93,3 +94,6 @@ C Defines:
 - while constants must be in upper case;
 - while macros must be in lower case;
 - while a DSL statement must be in upper case;
+
+Use ``lethe_memcmp``, ``lethe_memcpy`` and ``lethe_memset`` in replacement to ``memcmp``, ``memcpy`` and ``memset`` respectively.
+Those functions are defined in ``lethe_libc.h`` but if you has included ``lethe_types.h`` you indirectly has included ``lethe_libc.h`` too.

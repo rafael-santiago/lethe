@@ -181,8 +181,8 @@ static int do_drop(void) {
             goto do_drop_epilogue;
         }
 
-        memset(libpath, 0, sizeof(libpath));
-        memcpy(libpath, arg, func - arg);
+        lethe_memset(libpath, 0, sizeof(libpath));
+        lethe_memcpy(libpath, arg, func - arg);
         func += 1;
 
 #if defined(__unix__)
@@ -300,7 +300,7 @@ static int do_man(void) {
         goto do_man_epilogue;
     }
 
-    memset(content, 0, content_size + 1);
+    lethe_memset(content, 0, content_size + 1);
     fread(content, 1, content_size, fp);
 
     fprintf(pager, "%s", content);

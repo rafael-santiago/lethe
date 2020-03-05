@@ -6,6 +6,7 @@
  *
  */
 #include <cutest.h>
+#include <lethe_libc.h>
 #include <lethe_strglob.h>
 #include <lethe_mkpath.h>
 #include <lethe_random.h>
@@ -23,6 +24,12 @@
 int stat_call_nr = 0;
 
 int randomizer_call_nr = 0;
+
+int memcpy_nr = 0;
+
+int memcmp_nr = 0;
+
+int memset_nr = 0;
 
 static int stat_wrapper(const char *pathname, struct stat *buf);
 
@@ -52,6 +59,12 @@ static char *get_ndata_from_file(const char *filepath, const size_t data_size);
 
 static int lethe(const char *command, const char *user_choices);
 
+static int usr_memcmp(const void *b1, const void *b2, size_t len);
+
+static void *usr_memset(void *b, int c, size_t len);
+
+static void *usr_memcpy(void *dest, const void *src, size_t len);
+
 CUTE_DECLARE_TEST_CASE(lethe_tests_entry);
 
 CUTE_DECLARE_TEST_CASE(lethe_strglob_tests);
@@ -63,10 +76,16 @@ CUTE_DECLARE_TEST_CASE(lethe_option_stuff_tests);
 #endif
 CUTE_DECLARE_TEST_CASE(lethe_drop_tests);
 CUTE_DECLARE_TEST_CASE(lethe_tool_poke_tests);
+CUTE_DECLARE_TEST_CASE(lethe_set_memcmp_tests);
+CUTE_DECLARE_TEST_CASE(lethe_set_memcpy_tests);
+CUTE_DECLARE_TEST_CASE(lethe_set_memset_tests);
 
 CUTE_MAIN(lethe_tests_entry)
 
 CUTE_TEST_CASE(lethe_tests_entry)
+    CUTE_RUN_TEST(lethe_set_memcmp_tests);
+    CUTE_RUN_TEST(lethe_set_memcpy_tests);
+    CUTE_RUN_TEST(lethe_set_memset_tests);
     CUTE_RUN_TEST(lethe_strglob_tests);
     CUTE_RUN_TEST(lethe_mkpath_tests);
     CUTE_RUN_TEST(lethe_default_randomizer_tests);
@@ -78,6 +97,25 @@ CUTE_TEST_CASE(lethe_tests_entry)
 #if defined(LETHE_TOOL)
     CUTE_RUN_TEST(lethe_tool_poke_tests);
 #endif
+    // INFO(Rafael): Until now lethe_memcmp is available only for future necessities, no calls to memcmp are being done here.
+    CUTE_ASSERT(memcmp_nr == 0);
+    CUTE_ASSERT(memcpy_nr > 0);
+    CUTE_ASSERT(memset_nr > 0);
+CUTE_TEST_CASE_END
+
+CUTE_TEST_CASE(lethe_set_memcmp_tests)
+    CUTE_ASSERT(lethe_set_memcmp(NULL) != 0);
+    CUTE_ASSERT(lethe_set_memcmp(usr_memcmp) == 0);
+CUTE_TEST_CASE_END
+
+CUTE_TEST_CASE(lethe_set_memcpy_tests)
+    CUTE_ASSERT(lethe_set_memcpy(NULL) != 0);
+    CUTE_ASSERT(lethe_set_memcpy(usr_memcpy) == 0);
+CUTE_TEST_CASE_END
+
+CUTE_TEST_CASE(lethe_set_memset_tests)
+    CUTE_ASSERT(lethe_set_memset(NULL) != 0);
+    CUTE_ASSERT(lethe_set_memset(usr_memset) == 0);
 CUTE_TEST_CASE_END
 
 CUTE_TEST_CASE(lethe_tool_poke_tests)
@@ -472,7 +510,6 @@ CUTE_TEST_CASE(lethe_drop_tests)
     } else {
         fprintf(stdout, "WARN: Some test steps were skipped here.\n");
     }
-
 CUTE_TEST_CASE_END
 
 #if defined(LETHE_TOOL)
@@ -974,3 +1011,18 @@ static char *get_devpath(void) {
     return &devpath[0];
 }
 #endif
+
+static int usr_memcmp(const void *b1, const void *b2, size_t len) {
+    memcmp_nr++;
+    return memcmp(b1, b2, len);
+}
+
+static void *usr_memset(void *b, int c, size_t len) {
+    memset_nr++;
+    return memset(b, c, len);
+}
+
+static void *usr_memcpy(void *dest, const void *src, size_t len) {
+    memcpy_nr++;
+    return memcpy(dest, src, len);
+}

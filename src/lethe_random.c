@@ -18,7 +18,7 @@ unsigned char lethe_default_randomizer(void) {
     unsigned char byte;
 #if defined(__unix__)
     int fd;
-    
+
     fd = open("/dev/urandom", O_RDONLY);
 
     if (fd == -1) {

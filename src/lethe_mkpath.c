@@ -6,7 +6,7 @@
  *
  */
 #include <lethe_mkpath.h>
-#include <string.h>
+#include <lethe_libc.h>
 
 char *lethe_mkpath(char *buf, const size_t buf_size, const char *a, const size_t a_size, const char *b, const size_t b_size) {
     const char *ap, *ap_end, *bp, *bp_end;
@@ -16,7 +16,7 @@ char *lethe_mkpath(char *buf, const size_t buf_size, const char *a, const size_t
         return NULL;
     }
 
-    memset(buf, 0, buf_size);
+    lethe_memset(buf, 0, buf_size);
 
 #if defined(__unix__)
     ap = a;
@@ -29,7 +29,7 @@ char *lethe_mkpath(char *buf, const size_t buf_size, const char *a, const size_t
     m = ap_end - a + (a_size > 0);
 
     if (m > 0) {
-        memcpy(buf, a, m);
+        lethe_memcpy(buf, a, m);
     }
 
     bp = b;
@@ -42,7 +42,7 @@ char *lethe_mkpath(char *buf, const size_t buf_size, const char *a, const size_t
     *(buf + m) = (m > 0 && bp != bp_end) ? '/' : 0;
 
     if (bp != bp_end) {
-        memcpy(buf + m + (m > 0), bp, bp_end - bp);
+        lethe_memcpy(buf + m + (m > 0), bp, bp_end - bp);
     }
 #elif defined(_WIN32)
     ap = a;
@@ -56,7 +56,7 @@ char *lethe_mkpath(char *buf, const size_t buf_size, const char *a, const size_t
     m = ap_end - a + (a_size > 0);
 
     if (m > 0) {
-        memcpy(buf, a, m);
+        lethe_memcpy(buf, a, m);
     }
 
     bp = b;
@@ -70,7 +70,7 @@ char *lethe_mkpath(char *buf, const size_t buf_size, const char *a, const size_t
     *(buf + m) = (m > 0 && bp != bp_end) ? '\\' : 0;
 
     if (bp != bp_end) {
-        memcpy(buf + m + (m > 0), bp, bp_end - bp);
+        lethe_memcpy(buf + m + (m > 0), bp, bp_end - bp);
     }
 #else
 # error Some code wanted.

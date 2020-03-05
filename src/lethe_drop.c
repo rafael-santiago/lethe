@@ -352,7 +352,7 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
                              GENERIC_WRITE,
                              0, NULL,
                              OPEN_EXISTING,
-                             FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE) {       
+                             FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE) {
             lethe_set_error_code(kLetheErrorOpenHasFailed);
             goto lethe_do_drop_epilogue;
         }
@@ -364,12 +364,30 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
         // INFO(Rafael): Avoid leaking the original size of the file. The file data will turn into pure gibberish,
         //               anyway, if we can avoid leaking this kind of information, let's do it.
         if ((blkpad = st.st_size % st.st_blksize) > 0) {
-            blkpad = st.st_blksize - blkpad;
+            // INFO(Rafael): I have noticed that on ufs if the file size is too small, less than optimal block size,
+            //               if you force it to be equals to block size, the filesystem will discard the current inode and
+            //               write the new bloated data block to a new inode. The problem with this strategy is that the
+            //               old inode will not be really erased from disk. Forcing blkpad be equals to zero will
+            //               avoid this harmful strategy when considering privacy.
+            if (st.st_size > st.st_blksize) {
+                blkpad = st.st_blksize - blkpad;
+            } else {
+                blkpad = 0;
+            }
         }
 #elif defined(_WIN32)
         if ((blksize = get_blksize(filepath)) > 0) {
             if ((blkpad = st.st_size % blksize) > 0) {
-                blkpad = blksize - blkpad;
+                // INFO(Rafael): I have noticed that on ufs if the file size is too small, less than optimal block size,
+                //               if you force it to be equals to block size, the filesystem will discard the current inode and
+                //               write the new bloated data block to a new inode. The problem with this strategy is that the
+                //               old inode will not be really erased from disk. Forcing blkpad be equals to zero will
+                //               avoid this harmful strategy when considering privacy. I have decided take this care on Windows too.
+                if (st.st_size > st.st_blksize) {
+                    blkpad = blksize - blkpad;
+                } else {
+                    blkpad = 0;
+                }
             }
         } else {
             blkpad = 0;

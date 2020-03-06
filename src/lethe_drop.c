@@ -383,7 +383,7 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
                 //               write the new bloated data block to a new inode. The problem with this strategy is that the
                 //               old inode will not be really erased from disk. Forcing blkpad be equals to zero will
                 //               avoid this harmful strategy when considering privacy. I have decided take this care on Windows too.
-                if (st.st_size > st.st_blksize) {
+                if (st.st_size > blksize) {
                     blkpad = blksize - blkpad;
                 } else {
                     blkpad = 0;

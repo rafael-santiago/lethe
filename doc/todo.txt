@@ -1,3 +1,4 @@
+(A) Create RELNOTES.md. +Documentation
 x (A) Find out a way of ensuring/testing lethe_drop() without Foremost. +Tests
 x (A) Offer a way of indicating address to memcmp, memset and memcpy functions. +SecurityWorries,+ParanoidCare,+Feature
 x (B) Adding CONTRIBUTING.md

@@ -1,18 +1,16 @@
-1. Latest releases are in the top.
-2. Usually, I try to do my best in order to bring you 'RELNOTES' instead of notes from hell ;)
+>>1. Latest releases are in the top.
+>>2. Usually, I try to do my best in order to bring you 'RELNOTES' instead of notes from hell ;)
+>>Rafael
 
-    Rafael
---
+## v1 [git-tag: 'v1']
 
-# v1 [git-tah: 'v1']
-
-## Features:
+### Features:
 
 - Drop by using external and internal randomizer.
 - Total of passes done during renaming and file oblivion configured by the user.
 - Manual reader by using the system pager.
 - Supported platforms: ``Linux``, ``FreeBSD``, ``OpenBSD``, ``NetBSD``, ``MINIX``, ``Solaris`` and ``Windows``.
 
-## Bugfixes:
+### Bugfixes:
 
 - None!

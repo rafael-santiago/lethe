@@ -1,6 +1,7 @@
->>1. Latest releases are in the top.
->>2. Usually, I try to do my best in order to bring you 'RELNOTES' instead of notes from hell ;)
->>Rafael
+>1. Latest releases are in the top.
+>2. Usually, I try to do my best in order to bring you 'RELNOTES' instead of notes from hell ;)
+>
+>Rafael
 
 ## v1 [git-tag: 'v1']
 

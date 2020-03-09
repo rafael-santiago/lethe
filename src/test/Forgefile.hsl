@@ -160,7 +160,7 @@ local function set_devpath() : result type none {
     var lines type list;
     $lines = hefesto.sys.lines_from_file("../DEV_PATH", ".*");
     if ($lines.count() == 0) {
-        $lines = hefesto.sys.lines_from_file("/etc/fstab", "^/.*[\\t ]/[\\t ].*");
+        $lines = hefesto.sys.lines_from_file("/etc/fstab", "^/.* / .*");
         var devpath type string;
         if ($lines.count() != 1) {
             $devpath = hefesto.sys.prompt("It was not possible to guess the device path of your '/'. Please provide this path: ");

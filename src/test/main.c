@@ -934,7 +934,7 @@ static int lethe(const char *command, const char *user_choices) {
             fprintf(stderr, "Unable to create '.lethe_usr_inputs'.\n");
             return 1;
         }
-        fprintf(fp, "%s\n", user_choices);
+        fprintf(fp, "%s", user_choices);
         fclose(fp);
         usr_inputs = " < .lethe_usr_inputs";
     }

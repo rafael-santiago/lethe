@@ -27,8 +27,6 @@
 
 int g_lethe_drop_rename_nr = 10;
 
-lethe_stat g_lethe_stat = stat;
-
 int g_lethe_drop_overwrite_nr = 1;
 
 static char g_lethe_allowed_fname_symbols[] = {
@@ -85,7 +83,7 @@ int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, ...) {
         get_byte = va_arg(ap, lethe_randomizer);
     }
 
-    if (g_lethe_stat(pattern, &st) == 0) {
+    if (lethe_stat(pattern, &st) == 0) {
         // INFO(Rafael): Literal file names will directly be removed.
         if (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode)) {
             if ((has_error = lethe_do_drop(pattern, dtype, get_byte)) == 0) {
@@ -132,7 +130,7 @@ int lethe_drop_pattern(const char *pattern, const lethe_drop_type dtype, ...) {
 # error Some code wanted.
 #endif
         lethe_memcpy(fullpath, pattern, p - pattern);
-        if (g_lethe_stat(fullpath, &st) != 0 || !S_ISDIR(st.st_mode)) {
+        if (lethe_stat(fullpath, &st) != 0 || !S_ISDIR(st.st_mode)) {
             p = pattern;
             snprintf(fullpath, sizeof(fullpath) - 1, "%s", cwd);
             has_ldir = 0;
@@ -220,17 +218,6 @@ int lethe_set_rename_nr(const int value) {
     return has_error;
 }
 
-int lethe_set_stat(lethe_stat func_addr) {
-    int has_error = 1;
-
-    if (func_addr != NULL) {
-        g_lethe_stat = func_addr;
-        has_error = 0;
-    }
-
-    return has_error;
-}
-
 int lethe_set_overwrite_nr(const int value) {
     int has_error = 1;
 
@@ -312,7 +299,7 @@ static int lethe_do_drop(const char *filepath, const lethe_drop_type dtype, leth
 
     lethe_set_last_filepath(filepath);
 
-    if (g_lethe_stat(filepath, &st) != 0) {
+    if (lethe_stat(filepath, &st) != 0) {
         lethe_set_error_code(kLetheErrorUnableToAccess);
         goto lethe_do_drop_epilogue;
     }
@@ -659,7 +646,7 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
     filepath_size -= 1;
 
 #if defined(__unix__)
-    g_lethe_stat(filepath, &st);
+    lethe_stat(filepath, &st);
     if (S_ISDIR(st.st_mode)) {
         filepath_size = strlen(filepath) - 1;
         filepath_size -= (filepath[filepath_size] == '/');
@@ -669,7 +656,7 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
     }
     filepath_size += (filepath_size != 0);
 #elif defined(_WIN32)
-    g_lethe_stat(filepath, &st);
+    lethe_stat(filepath, &st);
     if (S_ISDIR(st.st_mode)) {
         filepath_size = strlen(filepath) - 1;
         filepath_size -= (filepath[filepath_size] == '\\' ||
@@ -706,7 +693,7 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
 
         do {
             get_rnd_filename(curr_fn, get_byte);
-        } while (g_lethe_stat(curr_fp, &st) == 0);
+        } while (lethe_stat(curr_fp, &st) == 0);
 
         if (rename(last_fp, curr_fp) != 0) {
             goto lethe_remove_epilogue;

@@ -14,6 +14,8 @@ void *(*lethe_memcpy)(void *, const void *, size_t) = memcpy;
 
 void *(*lethe_memset)(void *, int, size_t) = memset;
 
+int (*lethe_stat)(const char *, struct stat *) = stat;
+
 int lethe_set_memcmp(int (*usr_memcmp)(const void *, const void *, size_t)) {
     int has_error = 1;
     if (usr_memcmp != NULL) {
@@ -38,5 +40,16 @@ int lethe_set_memset(void *(*usr_memset)(void *, int, size_t)) {
         lethe_memset = usr_memset;
         has_error = 0;
     }
+    return has_error;
+}
+
+int lethe_set_stat(int (*usr_stat)(const char *, struct stat *)) {
+    int has_error = 1;
+
+    if (usr_stat != NULL) {
+        lethe_stat = usr_stat;
+        has_error = 0;
+    }
+
     return has_error;
 }

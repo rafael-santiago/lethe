@@ -95,5 +95,5 @@ C Defines:
 - while macros must be in lower case;
 - while a DSL statement must be in upper case;
 
-Use ``lethe_memcmp``, ``lethe_memcpy`` and ``lethe_memset`` in replacement to ``memcmp``, ``memcpy`` and ``memset`` respectively.
+Use ``lethe_memcmp``, ``lethe_memcpy``, ``lethe_memset`` and ``lethe_stat`` in replacement to ``memcmp``, ``memcpy``, ``memset`` and ``stat`` respectively.
 Those functions are defined in ``lethe_libc.h`` but if you has included ``lethe_types.h`` you indirectly has included ``lethe_libc.h`` too.

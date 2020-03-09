@@ -9,11 +9,8 @@
 #define LETHE_LETHE_TYPES_H 1
 
 #include <lethe_libc.h>
-#include <sys/stat.h>
 
 typedef unsigned char (*lethe_randomizer)(void);
-
-typedef int (*lethe_stat)(const char *, struct stat *);
 
 typedef enum {
     kLetheDataOblivion     =                         0x1,
@@ -40,6 +37,6 @@ extern char g_lethe_filepath[4096];
 
 extern int g_lethe_rename_nr;
 
-extern lethe_stat g_lethe_stat;
+//extern lethe_stat g_lethe_stat;
 
 #endif

@@ -713,7 +713,11 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
 #elif defined(_WIN32)
     // WARN(Rafael): Due to the fact of WINAPI's choice of zero return for error cases,
     //               let's use the unix equivalent wrappers, it will polute less the code.
-    if (S_ISREG(st.st_mode)) {
+	has_error = lethe_stat(curr_fp, &st);
+	if (has_error) {
+		goto lethe_remove_epilogue;
+	}
+	if (S_ISREG(st.st_mode)) {
         has_error = remove(curr_fp);
     } else if (S_ISDIR(st.st_mode)) {
         has_error = rmdir(curr_fp);

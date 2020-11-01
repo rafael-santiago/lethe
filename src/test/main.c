@@ -477,7 +477,9 @@ CUTE_TEST_CASE(lethe_drop_tests)
                 buf = get_random_printable_buffer(buf_size);
                 CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
                 sleep(5);
-                CUTE_ASSERT(system("fsync data.txt") == 0);
+                if (system("fsync data.txt") != 0) {
+                    CUTE_ASSERT(system("sync data.txt") == 0);
+                }
                 sleep(5);
 
                 fprintf(stdout, "      Test data created... Now let's forget this content by using Lethe... Wait...\n");
@@ -976,7 +978,7 @@ static int has_found_by_grep(const char *devpath, const char *signature) {
 static int has_grep(void) {
 #if defined(__unix__)
     return (system("cat /dev/null > /dev/null")     == 0 &&
-            system("strings --version > /dev/null") == 0 &&
+            system("which strings > /dev/null") == 0 &&
             system("grep --version > /dev/null")    == 0);
 #elif defined(_WIN32)
     return 0;

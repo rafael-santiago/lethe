@@ -612,12 +612,16 @@ static void get_rnd_databuf(unsigned char *buf, const size_t size, lethe_randomi
 static void get_rnd_filename(char *filename, lethe_randomizer get_byte) {
     char *fp, *fp_end;
     struct stat st;
+    unsigned char ri;
 
     fp = filename;
     fp_end = fp + strlen(fp);
 
     while (fp != fp_end) {
-        *fp = g_lethe_allowed_fname_symbols[get_byte() % g_lethe_allowed_fname_symbols_nr];
+        do {
+            ri = get_byte();
+        } while (ri >= 0xFF - (0xFF % g_lethe_allowed_fname_symbols_nr));
+        *fp = g_lethe_allowed_fname_symbols[(size_t)ri % g_lethe_allowed_fname_symbols_nr];
         fp++;
     }
 }
@@ -713,11 +717,11 @@ static int lethe_remove(const char *filepath, lethe_randomizer get_byte) {
 #elif defined(_WIN32)
     // WARN(Rafael): Due to the fact of WINAPI's choice of zero return for error cases,
     //               let's use the unix equivalent wrappers, it will polute less the code.
-	has_error = lethe_stat(curr_fp, &st);
-	if (has_error) {
-		goto lethe_remove_epilogue;
-	}
-	if (S_ISREG(st.st_mode)) {
+    has_error = lethe_stat(curr_fp, &st);
+    if (has_error) {
+        goto lethe_remove_epilogue;
+    }
+    if (S_ISREG(st.st_mode)) {
         has_error = remove(curr_fp);
     } else if (S_ISDIR(st.st_mode)) {
         has_error = rmdir(curr_fp);

@@ -22,6 +22,7 @@ dynrand.preloading() {
     $libname = "dynrand";
     if (hefesto.sys.os_name() != "windows") {
         $libname = $libname + ".so";
+        $cflags.add_item("-fPIC");
     } else {
         $libname = $libname + ".dll";
     }

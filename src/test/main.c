@@ -336,9 +336,9 @@ CUTE_TEST_CASE(lethe_drop_tests)
 
             buf = get_random_printable_buffer(buf_size);
             CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
-            sleep(5);
+            sleep(15);
             CUTE_ASSERT(system("sync data.txt") == 0);
-            sleep(5);
+            sleep(15);
 
             CUTE_ASSERT(write_foremost_config(buf, 10, buf + buf_size - 10, 10, "foremost.conf") == 0);
             CUTE_ASSERT(system("rm -f data.txt") == 0);
@@ -367,9 +367,9 @@ CUTE_TEST_CASE(lethe_drop_tests)
             buf_size = 100010;
             buf = get_random_printable_buffer(buf_size);
             CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
-            sleep(5);
+            sleep(15);
             CUTE_ASSERT(system("sync data.txt") == 0);
-            sleep(5);
+            sleep(15);
 
             CUTE_ASSERT(write_foremost_config(buf, 10, buf + buf_size - 10, 10, "foremost.conf") == 0);
 
@@ -397,9 +397,9 @@ CUTE_TEST_CASE(lethe_drop_tests)
             buf_size = 100010;
             buf = get_random_printable_buffer(buf_size);
             CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
-            sleep(5);
+            sleep(15);
             CUTE_ASSERT(system("sync data.txt") == 0);
-            sleep(5);
+            sleep(15);
 
             fprintf(stdout, "      Test data created... Now let's forget this content by using Lethe... Wait...\n");
 
@@ -435,9 +435,9 @@ CUTE_TEST_CASE(lethe_drop_tests)
 
                 buf = get_random_printable_buffer(buf_size);
                 CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
-                sleep(5);
+                sleep(15);
                 CUTE_ASSERT(system("sync data.txt") == 0);
-                sleep(5);
+                sleep(15);
 
                 CUTE_ASSERT(system("rm -f data.txt") == 0);
                 fprintf(stdout, "      Control data was removed. Now trying to recover it with grep and stuff... Hold on...\n");
@@ -455,9 +455,9 @@ CUTE_TEST_CASE(lethe_drop_tests)
                 buf_size = 20;
                 buf = get_random_printable_buffer(buf_size);
                 CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
-                sleep(5);
+                sleep(15);
                 CUTE_ASSERT(system("sync data.txt") == 0);
-                sleep(5);
+                sleep(15);
 
                 CUTE_ASSERT(lethe_drop("data.txt", kLetheDataOblivion | kLetheFileRemove) == 0);
 
@@ -476,11 +476,11 @@ CUTE_TEST_CASE(lethe_drop_tests)
                 buf_size = 20;
                 buf = get_random_printable_buffer(buf_size);
                 CUTE_ASSERT(write_data_to_file("data.txt", buf, buf_size) == 0);
-                sleep(5);
+                sleep(15);
                 if (system("fsync data.txt") != 0) {
                     CUTE_ASSERT(system("sync data.txt") == 0);
                 }
-                sleep(5);
+                sleep(15);
 
                 fprintf(stdout, "      Test data created... Now let's forget this content by using Lethe... Wait...\n");
 
